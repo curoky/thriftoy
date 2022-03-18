@@ -1,0 +1,5 @@
+version: "3"
+
+tasks:
+  client: ./echo.py client
+  server: ./echo.py server
