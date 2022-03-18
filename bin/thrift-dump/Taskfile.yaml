@@ -1,0 +1,7 @@
+version: "3"
+
+tasks:
+  default:
+    cmds:
+      - rm -rf data.db
+      - ./main.py --storage-type='sqlite'
