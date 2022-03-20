@@ -38,7 +38,15 @@ class StorageType(str, Enum):
 
 
 class DumpProcessor(TUnPackedProcessor):
-    def __init__(self, storage_type: StorageType, output_dir: Path, limit: int) -> None:
+    def __init__(
+        self,
+        storage_type: StorageType,
+        output_dir: Path,
+        limit: int,
+        transport_type: TransportType,
+        protocol_type: ProtocolType,
+    ) -> None:
+        super().__init__(transport_type=transport_type, protocol_type=protocol_type)
         self.storage_type = storage_type
         self.output_dir = output_dir
         self.limit = limit
@@ -47,7 +55,6 @@ class DumpProcessor(TUnPackedProcessor):
             self.engine = sqlmodel.create_engine(f"sqlite:///{output_dir}/data.db", echo=True)
             sqlmodel.SQLModel.metadata.create_all(self.engine)
 
-    # def process(self, client: TSocket, message: ThriftMessage):
     def process_message(self, socket: TSocket, message: ThriftMessage):
         if self.storage_type == StorageType.SQLITE:
             with sqlmodel.Session(self.engine) as session:
@@ -67,7 +74,13 @@ def main(
 ):
     logging.info("start recording server on %s:%s", host, port)
     server_socket = TServerSocket(host=host, port=port, client_timeout=10000)
-    processor = DumpProcessor(storage_type=storage_type, output_dir=output_dir, limit=limit)
+    processor = DumpProcessor(
+        storage_type=storage_type,
+        output_dir=output_dir,
+        limit=limit,
+        transport_type=transport_type,
+        protocol_type=protocol_type,
+    )
 
     server = TThreadedServer(
         processor=processor,
@@ -76,12 +89,6 @@ def main(
         itrans_factory=TMemoryComplexTransportFactory(transport_type),
     )
 
-    # server = TRecordServer(
-    #     trans=server_socket,
-    #     processor=processor,
-    #     transport_type=transport_type,
-    #     protocol_type=protocol_type,
-    # )
     server.serve()
 
 

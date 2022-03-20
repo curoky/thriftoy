@@ -16,6 +16,9 @@
 # limitations under the License.
 
 import sqlmodel
+from thriftpy2.transport.memory import TMemoryBuffer
+
+from thriftoy import ProtocolType, TransportType
 
 
 class ThriftMessage(sqlmodel.SQLModel, table=True):
@@ -29,4 +32,23 @@ class ThriftMessage(sqlmodel.SQLModel, table=True):
     method: str
     type: int  # TODO: to enum?
     seqid: int  # TODO: int32 or int64
+    protocol_type: ProtocolType = ProtocolType.BINARY
+    transport_type: TransportType = TransportType.FRAMED
     data: bytes
+
+    def extract_args(
+        self,
+        service,
+        method: str,
+    ):
+        # https://github.com/tiangolo/sqlmodel/pull/442
+        self.transport_type = TransportType(self.transport_type)
+        self.protocol_type = ProtocolType(self.protocol_type)
+
+        trans = self.transport_type.get_factory().get_transport(TMemoryBuffer(value=self.data))
+        prot = self.protocol_type.get_factory().get_protocol(trans)
+        prot.read_message_begin()
+        args = getattr(service, f"{method}_args")()
+        args.read(prot)
+        prot.read_message_end()
+        return args

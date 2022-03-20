@@ -1,0 +1,9 @@
+version: "3"
+
+includes:
+  thrift-dump: bin/thrift-dump
+  benchmakr: bin/benchmark
+tasks:
+  default:
+    cmds:
+      - ls

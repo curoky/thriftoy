@@ -18,12 +18,20 @@ from enum import Enum
 
 from thriftpy2.protocol.binary import TBinaryProtocolFactory
 from thriftpy2.protocol.compact import TCompactProtocolFactory
-from thriftpy2.transport import TBufferedTransportFactory, TFramedTransportFactory
+from thriftpy2.transport.buffered import TBufferedTransportFactory
+from thriftpy2.transport.framed import TFramedTransportFactory
 
 
 class ProtocolType(str, Enum):
     BINARY = "binary"
     COMPACT = "compact"
+
+    @staticmethod
+    def create(factory):
+        if isinstance(factory, TBinaryProtocolFactory):
+            return ProtocolType.BINARY
+        if isinstance(factory, TCompactProtocolFactory):
+            return ProtocolType.COMPACT
 
     def get_factory(self):
         match self.value:
@@ -36,7 +44,14 @@ class ProtocolType(str, Enum):
 class TransportType(str, Enum):
     FRAMED = "framed"
     BUFFERED = "buffered"
-    THEADER = "theader"
+    # THEADER = "theader"
+
+    @staticmethod
+    def create(factory):
+        if isinstance(factory, TFramedTransportFactory):
+            return TransportType.FRAMED
+        if isinstance(factory, TBufferedTransportFactory):
+            return TransportType.BUFFERED
 
     def get_factory(self):
         match self.value:

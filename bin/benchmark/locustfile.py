@@ -15,12 +15,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import locust
 import thriftpy2
+from sqlmodel import Session, create_engine, select
 
 from thriftoy.LocustUser import ThriftUser
+from thriftoy.ThriftMessage import ThriftMessage
 
 echo_thrift = thriftpy2.load("../echo/echo.thrift", module_name="echo_thrift")
+
+
+def get_thrift_message() -> list[ThriftMessage]:
+    engine = create_engine("sqlite:///../thrift-dump/data.db")
+    message = []
+    with Session(engine) as session:
+        statement = select(ThriftMessage).where(ThriftMessage.method == "echo")
+        results = session.exec(statement)
+        for result in results:
+            message.append(result)
+    return message
 
 
 class MyThriftUser(ThriftUser):
@@ -29,7 +43,16 @@ class MyThriftUser(ThriftUser):
     service = echo_thrift.EchoService
     ip = "0.0.0.0"
     port = 6000
+    messages = get_thrift_message()
 
     @locust.task
     def echo(self):
-        self.call("echo", "hhh")
+        print(self.messages[0])
+        args = self.messages[0].extract_args(echo_thrift.EchoService, method="echo")
+        self.call("echo", args.param)
+
+
+# if __name__ == "__main__":
+#     messages = get_thrift_message()
+#     args = messages[0].extract_args(echo_thrift.EchoService, method="echo")
+#     print(args)

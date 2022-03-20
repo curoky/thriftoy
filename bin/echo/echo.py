@@ -29,7 +29,7 @@ echo_thrift = thriftpy2.load("echo.thrift", module_name="echo_thrift")
 
 class Dispatcher:
     def echo(self, param):
-        # print(param)
+        print("receive:" + param)
         return param
 
 
