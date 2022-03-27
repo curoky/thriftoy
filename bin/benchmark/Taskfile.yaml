@@ -3,4 +3,4 @@ version: "3"
 tasks:
   default:
     cmds:
-      - locust -f locustfile.py --users=1 --spawn-rate=1 --headless --autostart
+      - locust -f locustfile.py --headless --autostart --users=1 --spawn-rate=1
