@@ -1,0 +1,9 @@
+version: "3"
+
+tasks:
+  save:
+    cmds:
+      - ./main.py save ../thrift-dump/data-echo.db ./
+  send:
+    cmds:
+      - ./main.py send ../thrift-dump/data-echo.db ./
