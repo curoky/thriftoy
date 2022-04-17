@@ -25,8 +25,9 @@ from thriftpy2.rpc import TThreadedServer
 from thriftpy2.transport import TServerSocket, TSocket
 
 from thriftoy import ProtocolType, TransportType
+from thriftoy.ThriftMessage import ThriftMessage
 from thriftoy.TMemoryComplexTransport import TMemoryComplexTransportFactory
-from thriftoy.TUnPackedProcessor import ThriftMessage, TUnPackedProcessor
+from thriftoy.TUnPackedProcessor import TUnPackedProcessor
 
 app = typer.Typer()
 
@@ -74,7 +75,7 @@ def main(
     limit: int = 100,
     transport_type: TransportType = TransportType.FRAMED,
     protocol_type: ProtocolType = ProtocolType.BINARY,
-    storage_type: StorageType = StorageType.JSON,
+    storage_type: StorageType = StorageType.SQLITE,
 ):
     logging.info("start recording server on %s:%s", host, port)
     server_socket = TServerSocket(host=host, port=port, client_timeout=10000)
