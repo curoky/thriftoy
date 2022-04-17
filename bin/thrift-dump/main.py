@@ -50,12 +50,16 @@ class DumpProcessor(TUnPackedProcessor):
         self.storage_type = storage_type
         self.output_dir = output_dir
         self.limit = limit
+        self.processed_size = 0
 
         if self.storage_type == StorageType.SQLITE:
             self.engine = sqlmodel.create_engine(f"sqlite:///{output_dir}/data.db", echo=True)
             sqlmodel.SQLModel.metadata.create_all(self.engine)
 
     def process_message(self, socket: TSocket, message: ThriftMessage):
+        self.processed_size += 1
+        if self.processed_size > self.limit:
+            return
         if self.storage_type == StorageType.SQLITE:
             with sqlmodel.Session(self.engine) as session:
                 session.add(message)
