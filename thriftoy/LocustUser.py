@@ -17,6 +17,7 @@
 
 import logging
 import random
+import socket
 import time
 
 import locust
@@ -30,14 +31,18 @@ class ThriftWithoutIDLUser(locust.User):
     hosts: list[str]
     ports: list[int]
     timeout = 2000
+    socket_family = socket.AF_INET
 
     def __init__(self, environment):
         super().__init__(environment)
-        idx = random.randint(0, len(self.hosts) - 1)
-        self.socket = TSocket(host=self.hosts[idx], port=self.ports[idx])
+        self.socket = self._init_socket()
         self.socket.open()
 
-    def send(self, method, data):
+    def _init_socket(self):
+        idx = random.randint(0, len(self.hosts) - 1)
+        return TSocket(host=self.hosts[idx], port=self.ports[idx], socket_family=self.socket_family)
+
+    def send(self, data, method="default"):
         start_perf_counter = time.perf_counter()
         exception = None
         try:
@@ -46,7 +51,10 @@ class ThriftWithoutIDLUser(locust.User):
             # socket.close()
         except Exception as e:
             logging.error("write failed: %s", e)
+            self.socket = self._init_socket()
+            self.socket.open()
             exception = e
+
         self.environment.events.request.fire(
             request_type="thrift",
             name=method,
@@ -67,15 +75,18 @@ class ThriftUser(locust.User):
     service = None
     protocol_factory = TBinaryProtocolFactory
     transport_factory = TFramedTransportFactory
+    socket_family = socket.AF_INET
 
     def __init__(self, environment):
         super().__init__(environment)
         idx = random.randint(0, len(self.hosts) - 1)
+
         self.client = make_client(
             self.service,
             host=self.hosts[idx],
             port=self.ports[idx],
             timeout=self.timeout,
+            socket_family=self.socket_family,
             proto_factory=self.protocol_factory(),
             trans_factory=self.transport_factory(),
         )
