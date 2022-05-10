@@ -42,19 +42,19 @@ class DumpProcessor(TUnPackedProcessor):
     def __init__(
         self,
         storage_type: StorageType,
-        output_dir: Path,
+        output_path: Path,
         limit: int,
         transport_type: TransportType,
         protocol_type: ProtocolType,
     ) -> None:
         super().__init__(transport_type=transport_type, protocol_type=protocol_type)
         self.storage_type = storage_type
-        self.output_dir = output_dir
+        self.output_path = output_path
         self.limit = limit
         self.processed_size = 0
 
         if self.storage_type == StorageType.SQLITE:
-            self.engine = sqlmodel.create_engine(f"sqlite:///{output_dir}/data.db", echo=True)
+            self.engine = sqlmodel.create_engine(f"sqlite:///{output_path}", echo=True)
             sqlmodel.SQLModel.metadata.create_all(self.engine)
 
     def process_message(self, socket: TSocket, message: ThriftMessage):
@@ -69,9 +69,9 @@ class DumpProcessor(TUnPackedProcessor):
 
 @app.command()
 def main(
+    output_path: Path,
     host: str = "0.0.0.0",
     port: int = 6000,
-    output_dir: Path = Path("."),
     limit: int = 100,
     transport_type: TransportType = TransportType.FRAMED,
     protocol_type: ProtocolType = ProtocolType.BINARY,
@@ -81,7 +81,7 @@ def main(
     server_socket = TServerSocket(host=host, port=port, client_timeout=10000)
     processor = DumpProcessor(
         storage_type=storage_type,
-        output_dir=output_dir,
+        output_path=output_path,
         limit=limit,
         transport_type=transport_type,
         protocol_type=protocol_type,
