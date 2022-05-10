@@ -18,7 +18,7 @@
 import sqlmodel
 from thriftpy2.transport.memory import TMemoryBuffer
 
-from thriftoy import ProtocolType, TransportType
+from . import ProtocolType, TransportType
 
 
 class ThriftMessage(sqlmodel.SQLModel, table=True):
