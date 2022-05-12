@@ -21,6 +21,22 @@ from thriftpy2.transport.memory import TMemoryBuffer
 from . import ProtocolType, TransportType
 
 
+def extract_method_args(
+    data,
+    service,
+    method,
+    transport_type=TransportType.FRAMED,
+    protocol_type=ProtocolType.BINARY,
+):
+    trans = transport_type.get_factory().get_transport(TMemoryBuffer(value=data))
+    prot = protocol_type.get_factory().get_protocol(trans)
+    prot.read_message_begin()
+    args = getattr(service, f"{method}_args")()
+    args.read(prot)
+    prot.read_message_end()
+    return args
+
+
 class ThriftMessage(sqlmodel.SQLModel, table=True):
     id: int | None = sqlmodel.Field(default=None, primary_key=True)
 
@@ -45,10 +61,10 @@ class ThriftMessage(sqlmodel.SQLModel, table=True):
         self.transport_type = TransportType(self.transport_type)
         self.protocol_type = ProtocolType(self.protocol_type)
 
-        trans = self.transport_type.get_factory().get_transport(TMemoryBuffer(value=self.data))
-        prot = self.protocol_type.get_factory().get_protocol(trans)
-        prot.read_message_begin()
-        args = getattr(service, f"{method}_args")()
-        args.read(prot)
-        prot.read_message_end()
-        return args
+        return extract_method_args(
+            data=self.data,
+            service=service,
+            method=method,
+            transport_type=self.transport_type,
+            protocol_type=self.protocol_type,
+        )
