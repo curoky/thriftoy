@@ -37,25 +37,20 @@ class TMessageDumpProcessor(TUnPackedProcessor):
         self,
         output_path: Path,
         limit: int,
-        transport_type: TransportType,
-        protocol_type: ProtocolType,
-        storage_type: StorageType = StorageType.SQLITE,
+        storage_engine,
+        transport_type: TransportType = TransportType.FRAMED,
+        protocol_type: ProtocolType = ProtocolType.BINARY,
     ) -> None:
         super().__init__(transport_type=transport_type, protocol_type=protocol_type)
-        self.storage_type = storage_type
         self.output_path = output_path
         self.limit = limit
         self.processed_size = 0
-
-        if self.storage_type == StorageType.SQLITE:
-            self.engine = sqlmodel.create_engine(f"sqlite:///{output_path}", echo=True)
-            sqlmodel.SQLModel.metadata.create_all(self.engine)
+        self.engine = storage_engine
 
     def process_message(self, socket: TSocket, message: ThriftMessage):
         self.processed_size += 1
         if self.processed_size > self.limit:
             return
-        if self.storage_type == StorageType.SQLITE:
-            with sqlmodel.Session(self.engine) as session:
-                session.add(message)
-                session.commit()
+        with sqlmodel.Session(self.engine) as session:
+            session.add(message)
+            session.commit()

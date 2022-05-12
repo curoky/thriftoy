@@ -18,11 +18,12 @@
 import logging
 from pathlib import Path
 
+import sqlmodel
 import typer
 from thriftpy2.rpc import TThreadedServer
 from thriftpy2.transport import TServerSocket
 
-from thriftoy import ProtocolType, TransportType
+from thriftoy import ProtocolType, ThriftMessage, TransportType
 from thriftoy.TMemoryComplexTransport import TMemoryComplexTransportFactory
 from thriftoy.TMessageDumpProcessor import TMessageDumpProcessor
 
@@ -31,7 +32,7 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    output_path: Path,
+    save_path: Path,
     host: str = "0.0.0.0",
     port: int = 6000,
     limit: int = 100,
@@ -40,9 +41,14 @@ def main(
 ):
     logging.info("start recording server on %s:%s", host, port)
     server_socket = TServerSocket(host=host, port=port, client_timeout=10000)
+
+    storage_engine = sqlmodel.create_engine(f"sqlite:///{save_path}", echo=True)
+    sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[ThriftMessage.__table__])
+
     processor = TMessageDumpProcessor(
-        output_path=output_path,
+        output_path=save_path,
         limit=limit,
+        storage_engine=storage_engine,
         transport_type=transport_type,
         protocol_type=protocol_type,
     )
@@ -53,7 +59,6 @@ def main(
         iprot_factory=protocol_type.get_factory(),
         itrans_factory=TMemoryComplexTransportFactory(transport_type),
     )
-
     server.serve()
 
 

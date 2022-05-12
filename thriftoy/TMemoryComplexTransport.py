@@ -33,11 +33,11 @@ class TMemoryComplexTransport(TBufferedTransport):
     ):
         super().__init__(trans, buf_size)
         self.buffer = io.BytesIO(b"")
-        self.tranport_type = transport_type
+        self.transport_type = transport_type
         self.frame_size = 0
 
     def read(self, sz: int):
-        if self.frame_size == 0 and self.tranport_type == TransportType.FRAMED:
+        if self.frame_size == 0 and self.transport_type == TransportType.FRAMED:
             buf = TTransportBase.read(self, 4)
             (self.frame_size,) = struct.unpack("!i", buf)
             self.buffer.write(buf)
@@ -46,13 +46,13 @@ class TMemoryComplexTransport(TBufferedTransport):
         return buf
 
     def flush(self):
-        if self.tranport_type == TransportType.FRAMED:
+        if self.transport_type == TransportType.FRAMED:
             self._trans.write(struct.pack("!i", len(self._wbuf.getbuffer())))
         TBufferedTransport.flush(self)
 
     def getvalue(self):
         value = self.buffer.getvalue()
-        if self.tranport_type == TransportType.FRAMED and len(value) - self.frame_size != 4:
+        if self.transport_type == TransportType.FRAMED and len(value) - self.frame_size != 4:
             raise TProtocolException(
                 TProtocolException.INVALID_DATA,
                 f"{len(value)}(buffer size) - {self.frame_size} (frame size) != 4",
