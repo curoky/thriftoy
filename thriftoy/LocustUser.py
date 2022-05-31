@@ -31,7 +31,6 @@ class ThriftWithoutIDLUser(locust.User):
     hosts: list[str]
     ports: list[int]
     timeout = 2000
-    socket_family = socket.AF_INET
 
     def __init__(self, environment):
         super().__init__(environment)
@@ -40,7 +39,10 @@ class ThriftWithoutIDLUser(locust.User):
 
     def _init_socket(self):
         idx = random.randint(0, len(self.hosts) - 1)
-        return TSocket(host=self.hosts[idx], port=self.ports[idx], socket_family=self.socket_family)
+        socket_family = socket.AF_INET
+        if ":" in self.hosts[idx]:
+            socket_family = socket.AF_INET6
+        return TSocket(host=self.hosts[idx], port=self.ports[idx], socket_family=socket_family)
 
     def send(self, data, method="default"):
         start_perf_counter = time.perf_counter()
@@ -75,18 +77,19 @@ class ThriftUser(locust.User):
     service = None
     protocol_factory = TBinaryProtocolFactory
     transport_factory = TFramedTransportFactory
-    socket_family = socket.AF_INET
 
     def __init__(self, environment):
         super().__init__(environment)
         idx = random.randint(0, len(self.hosts) - 1)
-
+        socket_family = socket.AF_INET
+        if ":" in self.hosts[idx]:
+            socket_family = socket.AF_INET6
         self.client = make_client(
             self.service,
             host=self.hosts[idx],
             port=self.ports[idx],
             timeout=self.timeout,
-            socket_family=self.socket_family,
+            socket_family=socket_family,
             proto_factory=self.protocol_factory(),
             trans_factory=self.transport_factory(),
         )
