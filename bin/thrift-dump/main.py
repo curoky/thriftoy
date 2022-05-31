@@ -20,12 +20,10 @@ from pathlib import Path
 
 import sqlmodel
 import typer
-from thriftpy2.rpc import TThreadedServer
-from thriftpy2.transport import TServerSocket
 
-from thriftoy import ProtocolType, ThriftMessage, TransportType
-from thriftoy.TMemoryComplexTransport import TMemoryComplexTransportFactory
-from thriftoy.TMessageDumpProcessor import TMessageDumpProcessor
+from thriftoy import ProtocolType, TransportType
+from thriftoy.DumpUtils import SimpleDBSaver, TMessageDumpProcessor, startDumpService
+from thriftoy.ThriftMessage import ThriftMessage
 
 app = typer.Typer()
 
@@ -40,26 +38,23 @@ def main(
     protocol_type: ProtocolType = ProtocolType.BINARY,
 ):
     logging.info("start recording server on %s:%s", host, port)
-    server_socket = TServerSocket(host=host, port=port, client_timeout=10000)
 
     storage_engine = sqlmodel.create_engine(f"sqlite:///{save_path}", echo=True)
     sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[ThriftMessage.__table__])
-
+    saver = SimpleDBSaver(storage_engine)
     processor = TMessageDumpProcessor(
-        output_path=save_path,
+        saver=saver,
         limit=limit,
-        storage_engine=storage_engine,
         transport_type=transport_type,
         protocol_type=protocol_type,
     )
-
-    server = TThreadedServer(
-        processor=processor,
-        trans=server_socket,
-        iprot_factory=protocol_type.get_factory(),
-        itrans_factory=TMemoryComplexTransportFactory(transport_type),
+    startDumpService(
+        host,
+        port,
+        processor,
+        transport_type=transport_type,
+        protocol_type=protocol_type,
     )
-    server.serve()
 
 
 if __name__ == "__main__":

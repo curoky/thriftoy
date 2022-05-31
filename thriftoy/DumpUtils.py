@@ -1,0 +1,110 @@
+# Copyright (c) 2023-2023 curoky(cccuroky@gmail.com).
+#
+# This file is part of thriftoy.
+# See https://github.com/curoky/thriftoy for further info.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import logging
+import multiprocessing
+import threading
+from collections.abc import Callable
+from enum import Enum
+from queue import Queue
+from typing import Any
+
+import sqlmodel
+from thriftpy2.rpc import TThreadedServer
+from thriftpy2.transport import TServerSocket, TSocket
+
+from . import ProtocolType, TransportType
+from .ThriftMessage import ThriftMessage
+from .TMemoryComplexTransport import TMemoryComplexTransportFactory
+from .TUnPackedProcessor import TUnPackedProcessor
+
+
+class StorageType(str, Enum):
+    DIRECTORY = "dir"
+    SQLITE = "sqlite"
+    JSON = "json"
+
+
+class SimpleDBSaver:
+    def __init__(self, engine) -> None:
+        self.engine = engine
+
+    def push(self, message: ThriftMessage):
+        while True:
+            with sqlmodel.Session(self.engine) as session:
+                session.add_all(message)
+                session.commit()
+
+
+class MultiProcessorDBSaver:
+    def __init__(self, engine, transform: Callable[[ThriftMessage], Any]) -> None:
+        self.engine = engine
+        self.pool = multiprocessing.Pool(10)
+        self.future_req_queue = Queue()
+        self.save_bg_thread = threading.Thread(target=self.save)
+        self.save_bg_thread.start()
+        self.transform = transform
+
+    def push(self, message: ThriftMessage):
+        self.future_req_queue.put(self.pool.apply_async(self.transform, args=(message,)))
+
+    def save(self):
+        logging.info("start thread for saving")
+        while True:
+            req = self.future_req_queue.get().get()
+            if req and len(req) != 0:
+                with sqlmodel.Session(self.engine) as session:
+                    session.add_all(req)
+                    session.commit()
+
+
+class TMessageDumpProcessor(TUnPackedProcessor):
+    def __init__(
+        self,
+        limit: int,
+        saver,
+        transport_type: TransportType = TransportType.FRAMED,
+        protocol_type: ProtocolType = ProtocolType.BINARY,
+    ) -> None:
+        super().__init__(transport_type=transport_type, protocol_type=protocol_type)
+        self.limit = limit
+        self.processed_size = 0
+        self.saver = saver
+
+    def process_message(self, socket: TSocket, message: ThriftMessage):
+        self.processed_size += 1
+        if self.processed_size > self.limit:
+            return
+        self.saver.push(message)
+
+
+def startDumpService(
+    host: str,
+    port: int,
+    processor,
+    protocol_type: ProtocolType = ProtocolType.BINARY,
+    transport_type: TransportType = TransportType.FRAMED,
+):
+    server_socket = TServerSocket(host=host, port=port, client_timeout=10000)
+    logging.info("start dump service on %s:%d", host, port)
+    server = TThreadedServer(
+        processor=processor,
+        trans=server_socket,
+        itrans_factory=TMemoryComplexTransportFactory(transport_type),
+        iprot_factory=protocol_type.get_factory(),
+    )
+    server.serve()
