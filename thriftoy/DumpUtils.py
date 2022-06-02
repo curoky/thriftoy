@@ -83,12 +83,15 @@ class TMessageDumpProcessor(TUnPackedProcessor):
         super().__init__(transport_type=transport_type, protocol_type=protocol_type)
         self.limit = limit
         self.processed_size = 0
+        self.processed_size_lock = threading.Lock()
+
         self.saver = saver
 
     def process_message(self, socket: TSocket, message: ThriftMessage):
-        self.processed_size += 1
-        if self.processed_size > self.limit:
-            return
+        with self.processed_size_lock:
+            self.processed_size += 1
+            if self.processed_size > self.limit:
+                return
         self.saver.push(message)
 
 
