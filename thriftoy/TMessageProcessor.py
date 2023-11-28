@@ -28,7 +28,7 @@ class EmptyThriftStruct:
         self.thrift_spec = set()
 
 
-class TUnPackedProcessor:
+class TMessageProcessor:
     def __init__(self, transport_type: TransportType, protocol_type: ProtocolType):
         self.transport_type = transport_type
         self.protocol_type = protocol_type
@@ -49,10 +49,10 @@ class TUnPackedProcessor:
         message.listen_host, message.listen_port = socket.sock.getsockname()
         message.transport_type = self.transport_type
         message.protocol_type = self.protocol_type
-        self.dump_message(socket, message)
+        self.process_message(socket, message)
 
         # NOTICE: if call `itrans.close()`, we should
         # `raise TTransportException(TTransportException.END_OF_FILE)`
 
-    def dump_message(self, socket: TSocket, message: ThriftMessage):
+    def process_message(self, socket: TSocket, message: ThriftMessage):
         pass

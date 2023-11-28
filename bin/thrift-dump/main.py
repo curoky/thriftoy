@@ -22,7 +22,7 @@ import sqlmodel
 import typer
 
 from thriftoy import ProtocolType, TransportType
-from thriftoy.DumpUtils import SimpleDBSaver, TMessageDumpProcessor, startDumpService
+from thriftoy.DumpService import SimpleDBSaver, TMessageDumpProcessor, startDumpService
 from thriftoy.ThriftMessage import ThriftMessage
 
 app = typer.Typer()

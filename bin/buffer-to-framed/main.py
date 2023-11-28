@@ -25,10 +25,10 @@ from thriftpy2.transport.framed import TFramedTransportFactory
 from thriftoy import ProtocolType, TransportType
 from thriftoy.ThriftMessage import ThriftMessage
 from thriftoy.TMemoryComplexTransport import TMemoryComplexTransportFactory
-from thriftoy.TUnPackedProcessor import TUnPackedProcessor
+from thriftoy.TMessageProcessor import TMessageProcessor
 
 
-class ProxyProcessor(TUnPackedProcessor):
+class ProxyProcessor(TMessageProcessor):
     def __init__(self, to_host: str, to_port: int) -> None:
         self.to_host = to_host
         self.to_port = to_port

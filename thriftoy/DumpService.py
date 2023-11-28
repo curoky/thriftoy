@@ -30,7 +30,7 @@ from thriftpy2.transport import TServerSocket, TSocket
 from . import ProtocolType, TransportType
 from .ThriftMessage import ThriftMessage
 from .TMemoryComplexTransport import TMemoryComplexTransportFactory
-from .TUnPackedProcessor import TUnPackedProcessor
+from .TMessageProcessor import TMessageProcessor
 
 
 class StorageType(str, Enum):
@@ -72,7 +72,7 @@ class MultiProcessorDBSaver:
                     session.commit()
 
 
-class TMessageDumpProcessor(TUnPackedProcessor):
+class TMessageDumpProcessor(TMessageProcessor):
     def __init__(
         self,
         dump_limit: int,
@@ -87,7 +87,7 @@ class TMessageDumpProcessor(TUnPackedProcessor):
 
         self.saver = saver
 
-    def dump_message(self, socket: TSocket, message: ThriftMessage):
+    def process_message(self, socket: TSocket, message: ThriftMessage):
         with self.dumped_size_lock:
             self.dumped_size += 1
             if self.dumped_size > self.dump_limit:
