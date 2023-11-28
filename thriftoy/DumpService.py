@@ -77,10 +77,7 @@ class TMessageDumpProcessor(TMessageProcessor):
         self,
         dump_limit: int,
         saver,
-        transport_type: TransportType = TransportType.FRAMED,
-        protocol_type: ProtocolType = ProtocolType.BINARY,
     ) -> None:
-        super().__init__(transport_type=transport_type, protocol_type=protocol_type)
         self.dump_limit = dump_limit
         self.dumped_size = 0
         self.dumped_size_lock = threading.Lock()

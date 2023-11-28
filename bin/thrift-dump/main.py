@@ -15,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import logging
 from pathlib import Path
 
@@ -41,12 +42,12 @@ def main(
 
     storage_engine = sqlmodel.create_engine(f"sqlite:///{db_path}", echo=True)
     sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[ThriftMessage.__table__])
+
     saver = SimpleDBSaver(storage_engine)
+
     processor = TMessageDumpProcessor(
         saver=saver,
         dump_limit=dump_limit,
-        transport_type=transport_type,
-        protocol_type=protocol_type,
     )
     startDumpService(
         listen_host,

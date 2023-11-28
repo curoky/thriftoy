@@ -17,10 +17,10 @@
 
 from enum import Enum
 
-from thriftpy2.protocol.binary import TBinaryProtocolFactory
-from thriftpy2.protocol.compact import TCompactProtocolFactory
+from thriftpy2.protocol.binary import TBinaryProtocol, TBinaryProtocolFactory
+from thriftpy2.protocol.compact import TCompactProtocol, TCompactProtocolFactory
 from thriftpy2.transport.buffered import TBufferedTransportFactory
-from thriftpy2.transport.framed import TFramedTransportFactory
+from thriftpy2.transport.framed import TFramedTransport, TFramedTransportFactory
 
 
 class ProtocolType(str, Enum):
@@ -28,12 +28,16 @@ class ProtocolType(str, Enum):
     COMPACT = "compact"
 
     @staticmethod
-    def create(factory) -> "ProtocolType":
-        if isinstance(factory, TBinaryProtocolFactory):
+    def create(factory_or_proto) -> "ProtocolType":
+        if isinstance(factory_or_proto, TBinaryProtocolFactory) or isinstance(
+            factory_or_proto, TBinaryProtocol
+        ):
             return ProtocolType.BINARY
-        if isinstance(factory, TCompactProtocolFactory):
+        if isinstance(factory_or_proto, TCompactProtocolFactory) or isinstance(
+            factory_or_proto, TCompactProtocol
+        ):
             return ProtocolType.COMPACT
-        raise Exception("ProtocolType: unknow factory %s", str(factory))
+        raise Exception("ProtocolType: unknow factory %s", str(factory_or_proto))
 
     def get_factory(self) -> TBinaryProtocolFactory | TCompactProtocolFactory:
         match self.value:
@@ -50,12 +54,16 @@ class TransportType(str, Enum):
     # THEADER = "theader"
 
     @staticmethod
-    def create(factory) -> "TransportType":
-        if isinstance(factory, TFramedTransportFactory):
+    def create(factory_or_trans) -> "TransportType":
+        if isinstance(factory_or_trans, TFramedTransportFactory) or isinstance(
+            factory_or_trans, TFramedTransport
+        ):
             return TransportType.FRAMED
-        if isinstance(factory, TBufferedTransportFactory):
+        if isinstance(factory_or_trans, TBufferedTransportFactory) or isinstance(
+            factory_or_trans, TBinaryProtocol
+        ):
             return TransportType.BUFFERED
-        raise Exception("TransportType: unknow factory %s", str(factory))
+        raise Exception("TransportType: unknow factory %s", str(factory_or_trans))
 
     def get_factory(self) -> TFramedTransportFactory | TBufferedTransportFactory:
         match self.value:
