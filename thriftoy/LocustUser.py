@@ -22,8 +22,10 @@ import time
 
 import locust
 from thriftpy2.protocol import TBinaryProtocolFactory
-from thriftpy2.rpc import TSocket, make_client
+from thriftpy2.rpc import make_client
 from thriftpy2.transport import TFramedTransportFactory
+
+from .ThriftSocket import ThriftSocket
 
 
 class ThriftWithoutIDLUser(locust.User):
@@ -31,18 +33,25 @@ class ThriftWithoutIDLUser(locust.User):
     hosts: list[str]
     ports: list[int]
     timeout = 2000
+    socket_bound_host: str | None = None
 
     def __init__(self, environment):
         super().__init__(environment)
-        self.socket = self._init_socket()
-        self.socket.open()
+        self.socket = self.create_and_open_socket()
 
-    def _init_socket(self):
+    def create_and_open_socket(self):
         idx = random.randint(0, len(self.hosts) - 1)
         socket_family = socket.AF_INET
         if ":" in self.hosts[idx]:
             socket_family = socket.AF_INET6
-        return TSocket(host=self.hosts[idx], port=self.ports[idx], socket_family=socket_family)
+        tsocket = ThriftSocket(
+            host=self.hosts[idx],
+            port=self.ports[idx],
+            socket_family=socket_family,
+            bound_addr=self.socket_bound_host,
+        )
+        tsocket.open()
+        return tsocket
 
     def send(self, data, method="default"):
         start_perf_counter = time.perf_counter()
@@ -53,7 +62,7 @@ class ThriftWithoutIDLUser(locust.User):
             # socket.close()
         except Exception as e:
             logging.error("write failed: %s", e)
-            self.socket = self._init_socket()
+            self.socket = self.create_and_open_socket()
             self.socket.open()
             exception = e
 
