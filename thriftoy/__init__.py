@@ -27,18 +27,20 @@ class ProtocolType(str, Enum):
     COMPACT = "compact"
 
     @staticmethod
-    def create(factory):
+    def create(factory) -> "ProtocolType":
         if isinstance(factory, TBinaryProtocolFactory):
             return ProtocolType.BINARY
         if isinstance(factory, TCompactProtocolFactory):
             return ProtocolType.COMPACT
+        raise Exception("ProtocolType: unknow factory %s", str(factory))
 
-    def get_factory(self):
+    def get_factory(self) -> TBinaryProtocolFactory | TCompactProtocolFactory:
         match self.value:
             case ProtocolType.BINARY:
                 return TBinaryProtocolFactory()
             case ProtocolType.COMPACT:
                 return TCompactProtocolFactory()
+        raise Exception("ProtocolType: unknow value %s", str(self.value))
 
 
 class TransportType(str, Enum):
@@ -47,15 +49,17 @@ class TransportType(str, Enum):
     # THEADER = "theader"
 
     @staticmethod
-    def create(factory):
+    def create(factory) -> "TransportType":
         if isinstance(factory, TFramedTransportFactory):
             return TransportType.FRAMED
         if isinstance(factory, TBufferedTransportFactory):
             return TransportType.BUFFERED
+        raise Exception("TransportType: unknow factory %s", str(factory))
 
-    def get_factory(self):
+    def get_factory(self) -> TFramedTransportFactory | TBufferedTransportFactory:
         match self.value:
             case TransportType.FRAMED:
                 return TFramedTransportFactory()
             case TransportType.BUFFERED:
                 return TBufferedTransportFactory()
+        raise Exception("TransportType: unknow value %s", str(self.value))

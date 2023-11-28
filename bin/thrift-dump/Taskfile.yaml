@@ -4,4 +4,4 @@ tasks:
   default:
     cmds:
       - rm -rf data.db
-      - ./main.py
+      - ./main.py data.db

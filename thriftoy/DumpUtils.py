@@ -46,7 +46,7 @@ class SimpleDBSaver:
     def push(self, message: ThriftMessage):
         while True:
             with sqlmodel.Session(self.engine) as session:
-                session.add_all(message)
+                session.add(message)
                 session.commit()
 
 
@@ -54,43 +54,43 @@ class MultiProcessorDBSaver:
     def __init__(self, engine, transform: Callable[[ThriftMessage], Any]) -> None:
         self.engine = engine
         self.pool = multiprocessing.Pool(10)
-        self.future_req_queue = Queue()
+        self.result_queue = Queue()
         self.save_bg_thread = threading.Thread(target=self.save)
         self.save_bg_thread.start()
         self.transform = transform
 
     def push(self, message: ThriftMessage):
-        self.future_req_queue.put(self.pool.apply_async(self.transform, args=(message,)))
+        self.result_queue.put(self.pool.apply_async(self.transform, args=(message,)))
 
     def save(self):
         logging.info("start thread for saving")
         while True:
-            req = self.future_req_queue.get().get()
-            if req and len(req) != 0:
+            result = self.result_queue.get().get()
+            if result and len(result) != 0:
                 with sqlmodel.Session(self.engine) as session:
-                    session.add_all(req)
+                    session.add_all(result)
                     session.commit()
 
 
 class TMessageDumpProcessor(TUnPackedProcessor):
     def __init__(
         self,
-        limit: int,
+        dump_limit: int,
         saver,
         transport_type: TransportType = TransportType.FRAMED,
         protocol_type: ProtocolType = ProtocolType.BINARY,
     ) -> None:
         super().__init__(transport_type=transport_type, protocol_type=protocol_type)
-        self.limit = limit
-        self.processed_size = 0
-        self.processed_size_lock = threading.Lock()
+        self.dump_limit = dump_limit
+        self.dumped_size = 0
+        self.dumped_size_lock = threading.Lock()
 
         self.saver = saver
 
-    def process_message(self, socket: TSocket, message: ThriftMessage):
-        with self.processed_size_lock:
-            self.processed_size += 1
-            if self.processed_size > self.limit:
+    def dump_message(self, socket: TSocket, message: ThriftMessage):
+        with self.dumped_size_lock:
+            self.dumped_size += 1
+            if self.dumped_size > self.dump_limit:
                 return
         self.saver.push(message)
 

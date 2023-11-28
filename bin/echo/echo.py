@@ -40,6 +40,7 @@ def server(
     protocol_type: ProtocolType = ProtocolType.BINARY,
     transport_type: TransportType = TransportType.FRAMED,
 ):
+    logging.info("start server on %s:%d", host, port)
     server = make_server(
         echo_thrift.EchoService,
         Dispatcher(),

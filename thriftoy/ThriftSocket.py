@@ -1,3 +1,4 @@
+import logging
 import socket
 
 from thriftpy2.transport.socket import TSocket
@@ -6,21 +7,28 @@ from thriftpy2.transport.socket import TSocket
 class ThriftSocket(TSocket):
     def __init__(
         self,
-        host=None,
-        port=None,
+        remote_host=None,
+        remote_port=None,
         unix_socket=None,
         sock=None,
         socket_family=socket.AF_INET,
         socket_timeout=3000,
         connect_timeout=None,
-        bound_addr: str | None = None,
+        local_host: str | None = None,
     ):
         super().__init__(
-            host, port, unix_socket, sock, socket_family, socket_timeout, connect_timeout
+            remote_host,
+            remote_port,
+            unix_socket,
+            sock,
+            socket_family,
+            socket_timeout,
+            connect_timeout,
         )
-        self.bound_addr = bound_addr
+        self.local_host = local_host
 
     def _init_sock(self):
-        self._init_sock()
-        if self.sock and self.bound_addr:
-            self.sock.bind((self.bound_addr, 0))
+        super()._init_sock()
+        if self.sock and self.local_host:
+            logging.info("ThriftSocket: bind socket on %s", self.local_host)
+            self.sock.bind((self.local_host, 0))

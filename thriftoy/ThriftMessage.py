@@ -22,9 +22,9 @@ from . import ProtocolType, TransportType
 
 
 def extract_method_args(
-    data,
+    data: bytes,
     service,
-    method,
+    method: str,
     transport_type=TransportType.FRAMED,
     protocol_type=ProtocolType.BINARY,
 ):
@@ -68,3 +68,19 @@ class ThriftMessage(sqlmodel.SQLModel, table=True):
             transport_type=self.transport_type,
             protocol_type=self.protocol_type,
         )
+
+
+def get_thrift_message(path: str, limit: int, method: str | None = None) -> list[ThriftMessage]:
+    engine = sqlmodel.create_engine(path)
+    messages = []
+    with sqlmodel.Session(engine) as session:
+        if method:
+            statement = (
+                sqlmodel.select(ThriftMessage).where(ThriftMessage.method == method).limit(limit)
+            )
+        else:
+            statement = sqlmodel.select(ThriftMessage).limit(limit)
+        results = session.exec(statement)
+        for result in results:
+            messages.append(result)
+    return messages

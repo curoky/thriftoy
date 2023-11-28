@@ -40,8 +40,9 @@ class MyThriftUser(ThriftWithoutIDLUser):
     wait_time = locust.between(0.009, 0.011)
 
     method = "echo"
-    hosts = ["0.0.0.0", "0.0.0.0"]
-    ports = [6000, 6000]
+    remote_hosts = ["0.0.0.0", "0.0.0.0"]
+    remote_ports = [6000, 6000]
+    local_bound_hosts = ["0.0.0.0", "0.0.0.0"]
     messages = get_thrift_message("sqlite:///../../thrift-dump/data.db")
 
     def __init__(self, environment):

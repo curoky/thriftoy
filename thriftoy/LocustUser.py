@@ -30,28 +30,29 @@ from .ThriftSocket import ThriftSocket
 
 class ThriftWithoutIDLUser(locust.User):
     abstract = True
-    hosts: list[str]
-    ports: list[int]
+
+    remote_hosts: list[str]
+    remote_ports: list[int]
+    local_bound_hosts: list[str] = []
     timeout = 2000
-    socket_bound_hosts: list[str] = []
 
     def __init__(self, environment):
         super().__init__(environment)
         self.socket = self.create_and_open_socket()
 
     def create_and_open_socket(self):
-        idx = random.randint(0, len(self.hosts) - 1)
+        idx = random.randint(0, len(self.remote_hosts) - 1)
         socket_family = socket.AF_INET
-        if ":" in self.hosts[idx]:
+        if ":" in self.remote_hosts[idx]:
             socket_family = socket.AF_INET6
-        bound_host = None
-        if len(self.socket_bound_hosts) == len(self.hosts):
-            bound_host = self.socket_bound_hosts[idx]
+        local_host = None
+        if len(self.local_bound_hosts) == len(self.remote_hosts):
+            local_host = self.local_bound_hosts[idx]
         tsocket = ThriftSocket(
-            host=self.hosts[idx],
-            port=self.ports[idx],
+            remote_host=self.remote_hosts[idx],
+            remote_port=self.remote_ports[idx],
             socket_family=socket_family,
-            bound_addr=bound_host,
+            local_host=local_host,
         )
         tsocket.open()
         return tsocket

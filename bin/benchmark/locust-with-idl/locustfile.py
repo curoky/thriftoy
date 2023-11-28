@@ -44,8 +44,8 @@ class MyThriftUser(ThriftUser):
 
     service = echo_thrift.EchoService
     method = "echo"
-    ips = ["0.0.0.0", "0.0.0.0"]
-    ports = [6000, 6000]
+    remote_hosts = ["0.0.0.0", "0.0.0.0"]
+    remote_ports = [6000, 6000]
     messages = get_thrift_message("sqlite:///../../thrift-dump/data.db", method="echo", limit=100)
 
     def __init__(self, environment):

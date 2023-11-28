@@ -30,27 +30,27 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    save_path: Path,
-    host: str = "0.0.0.0",
-    port: int = 6000,
-    limit: int = 100,
+    db_path: Path,
+    listen_host: str = "0.0.0.0",
+    listen_port: int = 6000,
+    dump_limit: int = 100,
     transport_type: TransportType = TransportType.FRAMED,
     protocol_type: ProtocolType = ProtocolType.BINARY,
 ):
-    logging.info("start recording server on %s:%s", host, port)
+    logging.info("start recording server on %s:%s", listen_host, listen_port)
 
-    storage_engine = sqlmodel.create_engine(f"sqlite:///{save_path}", echo=True)
+    storage_engine = sqlmodel.create_engine(f"sqlite:///{db_path}", echo=True)
     sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[ThriftMessage.__table__])
     saver = SimpleDBSaver(storage_engine)
     processor = TMessageDumpProcessor(
         saver=saver,
-        limit=limit,
+        dump_limit=dump_limit,
         transport_type=transport_type,
         protocol_type=protocol_type,
     )
     startDumpService(
-        host,
-        port,
+        listen_host,
+        listen_port,
         processor,
         transport_type=transport_type,
         protocol_type=protocol_type,
