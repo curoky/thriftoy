@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2023 curoky(cccuroky@gmail.com).
+# Copyright (c) 2022-2023 curoky(cccuroky@gmail.com).
 #
 # This file is part of thriftoy.
 # See https://github.com/curoky/thriftoy for further info.
