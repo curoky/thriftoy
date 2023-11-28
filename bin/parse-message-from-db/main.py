@@ -26,7 +26,7 @@ from thriftpy2.protocol.json import struct_to_json
 from thriftpy2.rpc import make_client
 from thriftpy2.transport.framed import TFramedTransportFactory
 
-from thriftoy.DBUtils import get_thrift_message
+from thriftoy.ThriftMessage import get_thrift_message
 
 app = typer.Typer()
 

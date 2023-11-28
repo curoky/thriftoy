@@ -27,10 +27,10 @@ import sqlmodel
 from thriftpy2.rpc import TThreadedServer
 from thriftpy2.transport import TServerSocket, TSocket
 
-from . import ProtocolType, TransportType
+from .contrib.TMemoryWrappedTransport import TMemoryWrappedTransportFactory
+from .contrib.TMessageProcessor import TMessageProcessor
+from .contrib.types import ProtocolType, TransportType
 from .ThriftMessage import ThriftMessage
-from .TMemoryComplexTransport import TMemoryComplexTransportFactory
-from .TMessageProcessor import TMessageProcessor
 
 
 class StorageType(str, Enum):
@@ -87,7 +87,7 @@ class TMessageDumpProcessor(TMessageProcessor):
 
         self.saver = saver
 
-    def process_message(self, socket: TSocket, message: ThriftMessage):
+    def handle_message(self, socket: TSocket, message: ThriftMessage):
         with self.dumped_size_lock:
             self.dumped_size += 1
             if self.dumped_size > self.dump_limit:
@@ -107,7 +107,7 @@ def startDumpService(
     server = TThreadedServer(
         processor=processor,
         trans=server_socket,
-        itrans_factory=TMemoryComplexTransportFactory(transport_type),
+        itrans_factory=TMemoryWrappedTransportFactory(transport_type),
         iprot_factory=protocol_type.get_factory(),
     )
     server.serve()

@@ -18,7 +18,7 @@
 import sqlmodel
 from thriftpy2.transport.memory import TMemoryBuffer
 
-from . import ProtocolType, TransportType
+from .contrib.types import ProtocolType, TransportType
 
 
 def extract_method_args(

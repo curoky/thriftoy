@@ -21,22 +21,30 @@ from thriftpy2.transport.socket import TSocket
 
 
 class ThriftSocket(TSocket):
+    """
+    Enhance `TSocket`
+        1. auto detect socket family by host.
+        2. support binding local host.
+    """
+
     def __init__(
         self,
-        remote_host=None,
-        remote_port=None,
-        unix_socket=None,
-        sock=None,
-        socket_family=socket.AF_INET,
+        remote_host: str,
+        remote_port: int,
         socket_timeout=3000,
         connect_timeout=None,
+        socket_family=None,
         local_host: str | None = None,
     ):
+        if socket_family is None:
+            socket_family = socket.AF_INET
+        if ":" in remote_host:
+            socket_family = socket.AF_INET6
         super().__init__(
             remote_host,
             remote_port,
-            unix_socket,
-            sock,
+            None,
+            None,
             socket_family,
             socket_timeout,
             connect_timeout,

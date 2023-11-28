@@ -22,10 +22,15 @@ from thriftpy2.protocol.exc import TProtocolException
 from thriftpy2.transport.base import TTransportBase
 from thriftpy2.transport.buffered import TBufferedTransport
 
-from . import TransportType
+from .types import TransportType
 
 
-class TMemoryComplexTransport(TBufferedTransport):
+class TMemoryWrappedTransport(TBufferedTransport):
+    """
+    TMemoryWrappedTransport is just a wrapped for TBufferedTransport/TFramedTransport, but
+    support to get inner serialized data directly.
+    """
+
     def __init__(
         self,
         trans,
@@ -61,9 +66,9 @@ class TMemoryComplexTransport(TBufferedTransport):
         return value
 
 
-class TMemoryComplexTransportFactory:
+class TMemoryWrappedTransportFactory:
     def __init__(self, transport_type: TransportType) -> None:
         self.transport_type = transport_type
 
     def get_transport(self, trans):
-        return TMemoryComplexTransport(trans, self.transport_type)
+        return TMemoryWrappedTransport(trans, self.transport_type)

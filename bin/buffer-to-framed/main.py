@@ -22,10 +22,10 @@ import typer
 from thriftpy2.rpc import TServerSocket, TSocket, TThreadedServer
 from thriftpy2.transport.framed import TFramedTransportFactory
 
-from thriftoy import ProtocolType, TransportType
+from thriftoy.contrib.TMemoryWrappedTransport import TMemoryWrappedTransportFactory
+from thriftoy.contrib.TMessageProcessor import TMessageProcessor
+from thriftoy.contrib.types import ProtocolType, TransportType
 from thriftoy.ThriftMessage import ThriftMessage
-from thriftoy.TMemoryComplexTransport import TMemoryComplexTransportFactory
-from thriftoy.TMessageProcessor import TMessageProcessor
 
 
 class ProxyProcessor(TMessageProcessor):
@@ -33,9 +33,9 @@ class ProxyProcessor(TMessageProcessor):
         self.to_host = to_host
         self.to_port = to_port
 
-    def process_message(self, from_socket: TSocket, message: ThriftMessage):
+    def handle_message(self, from_socket: TSocket, message: ThriftMessage):
         to_socket = TSocket(self.to_host, self.to_port)
-        to_otrans = TMemoryComplexTransportFactory(TransportType.FRAMED).get_transport(to_socket)
+        to_otrans = TMemoryWrappedTransportFactory(TransportType.FRAMED).get_transport(to_socket)
         to_otrans.open()
         to_otrans.write(message.data)
         to_otrans.flush()
@@ -57,7 +57,7 @@ def main(host: str = "0.0.0.0", port: int = 6000, to_host: str = "0.0.0.0", to_p
         processor=processor,
         trans=server_socket,
         iprot_factory=ProtocolType.BINARY.get_factory(),
-        itrans_factory=TMemoryComplexTransportFactory(TransportType.BUFFERED),
+        itrans_factory=TMemoryWrappedTransportFactory(TransportType.BUFFERED),
     )
 
     server.serve()

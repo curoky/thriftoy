@@ -14,18 +14,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import socket
 
 from thriftpy2.protocol import TBinaryProtocolFactory
 from thriftpy2.rpc import TClient, TSocket
 from thriftpy2.transport import TFramedTransportFactory
 
+from .ThriftSocket import ThriftSocket
+
 
 class ThriftClient(TClient):
+    """
+    Enhance `TClient` to perform RPC call using serilized data direactly.
+    """
+
     def __init__(self, service, iprot, oprot=None):
         super().__init__(service, iprot, oprot)
 
-    def rpc_with_data(self, method: str, data: bytes):
+    def call_with_serialized_data(self, method: str, data: bytes):
         socket: TSocket = self._oprot.trans._trans._trans
         socket.write(data)
         socket.flush()
@@ -41,12 +46,7 @@ def make_client(
     socket_family=None,
     timeout=3000,
 ):
-    if socket_family is None:
-        socket_family = socket.AF_INET
-        if ":" in host:
-            socket_family = socket.AF_INET6
-    tsocket = TSocket(host, port, socket_family=socket_family, socket_timeout=timeout)
-
+    tsocket = ThriftSocket(host, port, socket_family=socket_family, socket_timeout=timeout)
     transport = trans_factory.get_transport(tsocket)
     protocol = proto_factory.get_protocol(transport)
     transport.open()

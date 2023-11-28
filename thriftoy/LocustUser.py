@@ -17,7 +17,6 @@
 
 import logging
 import random
-import socket
 import time
 
 import locust
@@ -42,16 +41,12 @@ class ThriftWithoutIDLUser(locust.User):
 
     def create_and_open_socket(self):
         idx = random.randint(0, len(self.remote_hosts) - 1)
-        socket_family = socket.AF_INET
-        if ":" in self.remote_hosts[idx]:
-            socket_family = socket.AF_INET6
         local_host = None
         if len(self.local_bound_hosts) == len(self.remote_hosts):
             local_host = self.local_bound_hosts[idx]
         tsocket = ThriftSocket(
             remote_host=self.remote_hosts[idx],
             remote_port=self.remote_ports[idx],
-            socket_family=socket_family,
             local_host=local_host,
         )
         tsocket.open()
@@ -83,6 +78,7 @@ class ThriftWithoutIDLUser(locust.User):
 
 class ThriftUser(locust.User):
     abstract = True
+
     hosts: list[str]
     ports: list[int]
     timeout = 3000
@@ -94,15 +90,11 @@ class ThriftUser(locust.User):
     def __init__(self, environment):
         super().__init__(environment)
         idx = random.randint(0, len(self.hosts) - 1)
-        socket_family = socket.AF_INET
-        if ":" in self.hosts[idx]:
-            socket_family = socket.AF_INET6
         self.client = make_client(
             self.service,
             host=self.hosts[idx],
             port=self.ports[idx],
             timeout=self.timeout,
-            socket_family=socket_family,
             proto_factory=self.protocol_factory(),
             trans_factory=self.transport_factory(),
         )

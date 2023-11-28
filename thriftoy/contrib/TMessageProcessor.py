@@ -18,9 +18,9 @@
 from thriftpy2.protocol.binary import TBinaryProtocol
 from thriftpy2.rpc import TSocket
 
-from . import ProtocolType, TransportType
-from .ThriftMessage import ThriftMessage
-from .TMemoryComplexTransport import TMemoryComplexTransport
+from ..ThriftMessage import ThriftMessage
+from .TMemoryWrappedTransport import TMemoryWrappedTransport
+from .types import ProtocolType, TransportType
 
 
 class EmptyThriftStruct:
@@ -29,11 +29,16 @@ class EmptyThriftStruct:
 
 
 class TMessageProcessor:
+    """
+    A TProcessor for unpacking a thrift message without IDL.
+    Need to implement the handle_message function.
+    """
+
     def __init__(self, transport_type: TransportType, protocol_type: ProtocolType):
         self.transport_type = transport_type
         self.protocol_type = protocol_type
 
-    def unpack_message(self, prot: TBinaryProtocol) -> ThriftMessage:
+    def process_in(self, prot: TBinaryProtocol) -> ThriftMessage:
         method, type, seqid = prot.read_message_begin()
         prot.read_struct(EmptyThriftStruct())
         prot.read_message_end()
@@ -41,18 +46,18 @@ class TMessageProcessor:
         return ThriftMessage(method=method, type=type, seqid=seqid, data=data)
 
     def process(self, iprot: TBinaryProtocol, oprot: TBinaryProtocol):
-        itrans: TMemoryComplexTransport = iprot.trans
-        message = self.unpack_message(iprot)
+        itrans: TMemoryWrappedTransport = iprot.trans
+        message = self.process_in(iprot)
         socket: TSocket = itrans._trans
         assert socket.sock is not None
         message.from_host, message.from_port = socket.sock.getpeername()
         message.listen_host, message.listen_port = socket.sock.getsockname()
         message.transport_type = self.transport_type
         message.protocol_type = self.protocol_type
-        self.process_message(socket, message)
+        self.handle_message(socket, message)
 
         # NOTICE: if call `itrans.close()`, we should
         # `raise TTransportException(TTransportException.END_OF_FILE)`
 
-    def process_message(self, socket: TSocket, message: ThriftMessage):
+    def handle_message(self, socket: TSocket, message: ThriftMessage):
         pass

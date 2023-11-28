@@ -21,7 +21,7 @@ from pathlib import Path
 import sqlmodel
 import typer
 
-from thriftoy import ProtocolType, TransportType
+from thriftoy.contrib.types import ProtocolType, TransportType
 from thriftoy.DumpService import SimpleDBSaver, TMessageDumpProcessor, startDumpService
 from thriftoy.ThriftMessage import ThriftMessage
 
