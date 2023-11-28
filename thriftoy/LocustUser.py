@@ -33,7 +33,7 @@ class ThriftWithoutIDLUser(locust.User):
     hosts: list[str]
     ports: list[int]
     timeout = 2000
-    socket_bound_host: str | None = None
+    socket_bound_hosts: list[str] = []
 
     def __init__(self, environment):
         super().__init__(environment)
@@ -44,11 +44,14 @@ class ThriftWithoutIDLUser(locust.User):
         socket_family = socket.AF_INET
         if ":" in self.hosts[idx]:
             socket_family = socket.AF_INET6
+        bound_host = None
+        if len(self.socket_bound_hosts) == len(self.hosts):
+            bound_host = self.socket_bound_hosts[idx]
         tsocket = ThriftSocket(
             host=self.hosts[idx],
             port=self.ports[idx],
             socket_family=socket_family,
-            bound_addr=self.socket_bound_host,
+            bound_addr=bound_host,
         )
         tsocket.open()
         return tsocket
