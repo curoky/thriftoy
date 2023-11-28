@@ -25,7 +25,7 @@ from thriftpy2.protocol import TBinaryProtocolFactory
 from thriftpy2.rpc import make_client
 from thriftpy2.transport import TFramedTransportFactory
 
-from .ThriftSocket import ThriftSocket
+from .contrib.ThriftSocket import ThriftSocket
 
 
 class ThriftWithoutIDLUser(locust.User):

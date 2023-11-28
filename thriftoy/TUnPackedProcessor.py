@@ -14,14 +14,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from thriftpy2.protocol.binary import TBinaryProtocol
 from thriftpy2.rpc import TSocket
 
-from thriftoy import ProtocolType, TransportType
-
+from . import ProtocolType, TransportType
 from .ThriftMessage import ThriftMessage
-from .ThriftStruct import EmptyThriftStruct
 from .TMemoryComplexTransport import TMemoryComplexTransport
+
+
+class EmptyThriftStruct:
+    def __init__(self):
+        self.thrift_spec = set()
 
 
 class TUnPackedProcessor:
