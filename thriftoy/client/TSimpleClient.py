@@ -15,39 +15,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from thriftpy2.protocol import TBinaryProtocolFactory
-from thriftpy2.rpc import TClient, TSocket
-from thriftpy2.transport import TFramedTransportFactory
 
-from .ThriftSocket import ThriftSocket
+from thriftpy2.protocol.binary import TBinaryProtocolFactory
+from thriftpy2.rpc import TClient
+from thriftpy2.transport.framed import TFramedTransportFactory
+
+from ..common.TMessage import TMessage
+from ..common.TSimpleSocket import TSimpleSocket
 
 
-class ThriftClient(TClient):
+class TSimpleClient(TClient):
     """
-    Enhance `TClient` to perform RPC call using serilized data direactly.
+    Simplify `TClient`.
     """
 
-    def __init__(self, service, iprot, oprot=None):
+    def __init__(
+        self,
+        service,
+        iprot,
+        oprot=None,
+    ):
         super().__init__(service, iprot, oprot)
 
-    def call_with_serialized_data(self, method: str, data: bytes):
-        socket: TSocket = self._oprot.trans._trans._trans
-        socket.write(data)
-        socket.flush()
-        return self._recv(method)
+    def call(self, message: TMessage):
+        args = message.extract_args(self._service)
+        return TClient.__getattr__(self, message.method)(*list(vars(args).values()))
 
 
-def make_client(
-    service,
+def make_simple_client(
     host,
     port,
+    service,
     proto_factory=TBinaryProtocolFactory(),  # noqa: B008
     trans_factory=TFramedTransportFactory(),  # noqa: B008
     socket_family=None,
     timeout=3000,
-):
-    tsocket = ThriftSocket(host, port, socket_family=socket_family, socket_timeout=timeout)
+) -> TSimpleClient:
+    tsocket = TSimpleSocket(host, port, socket_family=socket_family, socket_timeout=timeout)
     transport = trans_factory.get_transport(tsocket)
     protocol = proto_factory.get_protocol(transport)
     transport.open()
-    return ThriftClient(service, protocol)
+    return TSimpleClient(service, protocol)
