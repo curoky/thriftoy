@@ -18,7 +18,7 @@
 import sqlmodel
 from thriftpy2.transport.memory import TMemoryBuffer
 
-from .contrib.types import ProtocolType, TransportType
+from .TTypes import ProtocolType, TransportType
 
 
 def extract_method_args(
@@ -37,7 +37,7 @@ def extract_method_args(
     return args
 
 
-class ThriftMessage(sqlmodel.SQLModel, table=True):
+class TMessage(sqlmodel.SQLModel, table=True):
     id: int | None = sqlmodel.Field(default=None, primary_key=True)
 
     from_host: str | None = ""
@@ -55,7 +55,6 @@ class ThriftMessage(sqlmodel.SQLModel, table=True):
     def extract_args(
         self,
         service,
-        method: str,
     ):
         # https://github.com/tiangolo/sqlmodel/pull/442
         self.transport_type = TransportType(self.transport_type)
@@ -64,22 +63,20 @@ class ThriftMessage(sqlmodel.SQLModel, table=True):
         return extract_method_args(
             data=self.data,
             service=service,
-            method=method,
+            method=self.method,
             transport_type=self.transport_type,
             protocol_type=self.protocol_type,
         )
 
 
-def get_thrift_message(path: str, limit: int, method: str | None = None) -> list[ThriftMessage]:
-    engine = sqlmodel.create_engine(path)
+def get_thrift_message(path: str, limit: int, method: str | None = None) -> list[TMessage]:
+    engine = sqlmodel.create_engine(f"sqlite:///{path}")
     messages = []
     with sqlmodel.Session(engine) as session:
         if method:
-            statement = (
-                sqlmodel.select(ThriftMessage).where(ThriftMessage.method == method).limit(limit)
-            )
+            statement = sqlmodel.select(TMessage).where(TMessage.method == method).limit(limit)
         else:
-            statement = sqlmodel.select(ThriftMessage).limit(limit)
+            statement = sqlmodel.select(TMessage).limit(limit)
         results = session.exec(statement)
         for result in results:
             messages.append(result)

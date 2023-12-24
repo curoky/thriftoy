@@ -20,7 +20,7 @@ import socket
 from thriftpy2.transport.socket import TSocket
 
 
-class ThriftSocket(TSocket):
+class TSimpleSocket(TSocket):
     """
     Enhance `TSocket`
         1. auto detect socket family by host.
