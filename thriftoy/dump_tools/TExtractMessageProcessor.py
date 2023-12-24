@@ -18,9 +18,9 @@
 from thriftpy2.protocol.binary import TBinaryProtocol
 from thriftpy2.rpc import TSocket
 
-from ..ThriftMessage import ThriftMessage
+from ..common.TMessage import TMessage
+from ..common.TTypes import ProtocolType
 from .TMemoryWrappedTransport import TMemoryWrappedTransport
-from .types import ProtocolType
 
 
 class EmptyThriftStruct:
@@ -28,18 +28,18 @@ class EmptyThriftStruct:
         self.thrift_spec = set()
 
 
-class TMessageProcessor:
+class TExtractMessageProcessor:
     """
     A TProcessor for unpacking a thrift message without IDL.
     Need to implement the handle_message function.
     """
 
-    def process_in(self, prot: TBinaryProtocol) -> ThriftMessage:
+    def process_in(self, prot: TBinaryProtocol) -> TMessage:
         method, type, seqid = prot.read_message_begin()
         prot.read_struct(EmptyThriftStruct())
         prot.read_message_end()
         data = prot.trans.getvalue()
-        return ThriftMessage(method=method, type=type, seqid=seqid, data=data)
+        return TMessage(method=method, type=type, seqid=seqid, data=data)
 
     def process(self, iprot: TBinaryProtocol, oprot: TBinaryProtocol):
         itrans: TMemoryWrappedTransport = iprot.trans
@@ -55,5 +55,5 @@ class TMessageProcessor:
         # NOTICE: if call `itrans.close()`, we should
         # `raise TTransportException(TTransportException.END_OF_FILE)`
 
-    def handle_message(self, socket: TSocket, message: ThriftMessage):
+    def handle_message(self, socket: TSocket, message: TMessage):
         pass

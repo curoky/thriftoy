@@ -24,7 +24,7 @@ from thriftpy2.protocol import TBinaryProtocolFactory
 from thriftpy2.rpc import make_client
 from thriftpy2.transport import TFramedTransportFactory
 
-from .contrib.ThriftSocket import ThriftSocket
+from ..common.TSimpleSocket import TSimpleSocket
 
 
 class ThriftWithoutIDLUser(locust.User):
@@ -44,7 +44,7 @@ class ThriftWithoutIDLUser(locust.User):
         local_host = None
         if len(self.local_bound_hosts) == len(self.remote_hosts):
             local_host = self.local_bound_hosts[idx]
-        tsocket = ThriftSocket(
+        tsocket = TSimpleSocket(
             remote_host=self.remote_hosts[idx],
             remote_port=self.remote_ports[idx],
             local_host=local_host,

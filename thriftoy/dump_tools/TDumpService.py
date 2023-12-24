@@ -27,10 +27,10 @@ import sqlmodel
 from thriftpy2.rpc import TThreadedServer
 from thriftpy2.transport import TServerSocket, TSocket
 
-from .contrib.TMemoryWrappedTransport import TMemoryWrappedTransportFactory
-from .contrib.TMessageProcessor import TMessageProcessor
-from .contrib.types import ProtocolType, TransportType
-from .ThriftMessage import ThriftMessage
+from ..common.TMessage import TMessage
+from ..common.TTypes import ProtocolType, TransportType
+from .TExtractMessageProcessor import TExtractMessageProcessor
+from .TMemoryWrappedTransport import TMemoryWrappedTransportFactory
 
 
 class StorageType(str, Enum):
@@ -43,7 +43,7 @@ class SimpleDBSaver:
     def __init__(self, engine) -> None:
         self.engine = engine
 
-    def push(self, message: ThriftMessage):
+    def push(self, message: TMessage):
         while True:
             with sqlmodel.Session(self.engine) as session:
                 session.add(message)
@@ -51,7 +51,7 @@ class SimpleDBSaver:
 
 
 class MultiProcessorDBSaver:
-    def __init__(self, engine, transform: Callable[[ThriftMessage], Any]) -> None:
+    def __init__(self, engine, transform: Callable[[TMessage], Any]) -> None:
         self.engine = engine
         self.pool = multiprocessing.Pool(10)
         self.result_queue = Queue()
@@ -59,7 +59,7 @@ class MultiProcessorDBSaver:
         self.save_bg_thread.start()
         self.transform = transform
 
-    def push(self, message: ThriftMessage):
+    def push(self, message: TMessage):
         self.result_queue.put(self.pool.apply_async(self.transform, args=(message,)))
 
     def save(self):
@@ -72,7 +72,7 @@ class MultiProcessorDBSaver:
                     session.commit()
 
 
-class TMessageDumpProcessor(TMessageProcessor):
+class TMessageDumpProcessor(TExtractMessageProcessor):
     def __init__(
         self,
         dump_limit: int,
@@ -84,7 +84,7 @@ class TMessageDumpProcessor(TMessageProcessor):
 
         self.saver = saver
 
-    def handle_message(self, socket: TSocket, message: ThriftMessage):
+    def handle_message(self, socket: TSocket, message: TMessage):
         with self.dumped_size_lock:
             self.dumped_size += 1
             if self.dumped_size > self.dump_limit:

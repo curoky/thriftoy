@@ -22,7 +22,7 @@ from thriftpy2.protocol.exc import TProtocolException
 from thriftpy2.transport.base import TTransportBase
 from thriftpy2.transport.buffered import TBufferedTransport
 
-from .types import TransportType
+from ..common.TTypes import TransportType
 
 
 class TMemoryWrappedTransport(TBufferedTransport):
@@ -64,6 +64,9 @@ class TMemoryWrappedTransport(TBufferedTransport):
                 f"{len(value)}(buffer size) - {self.frame_size} (frame size) != 4",
             )
         return value
+
+    def clearbuffer(self):
+        self.buffer.seek(0)
 
 
 class TMemoryWrappedTransportFactory:
