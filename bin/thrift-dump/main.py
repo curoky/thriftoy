@@ -22,9 +22,9 @@ from pathlib import Path
 import sqlmodel
 import typer
 
-from thriftoy.contrib.types import ProtocolType, TransportType
-from thriftoy.DumpService import SimpleDBSaver, TMessageDumpProcessor, startDumpService
-from thriftoy.ThriftMessage import ThriftMessage
+from thriftoy.common.TMessage import TMessage
+from thriftoy.common.TTypes import ProtocolType, TransportType
+from thriftoy.dump_tools.TDumpService import SimpleDBSaver, TMessageDumpProcessor, startDumpService
 
 app = typer.Typer()
 
@@ -41,7 +41,7 @@ def main(
     logging.info("start recording server on %s:%s", listen_host, listen_port)
 
     storage_engine = sqlmodel.create_engine(f"sqlite:///{db_path}", echo=True)
-    sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[ThriftMessage.__table__])
+    sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[TMessage.__table__])
 
     saver = SimpleDBSaver(storage_engine)
 

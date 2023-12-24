@@ -24,16 +24,16 @@ import thriftpy2
 from sqlmodel import Session, create_engine, select
 from thriftpy2.contrib.aio.rpc import TAsyncSocket
 
-from thriftoy.ThriftMessage import ThriftMessage
+from thriftoy.common.TMessage import TMessage
 
 echo_thrift = thriftpy2.load("../echo/echo.thrift", module_name="echo_thrift")
 
 
-def get_thrift_message(path: str, method: str, limit: int) -> list[ThriftMessage]:
+def get_thrift_message(path: str, method: str, limit: int) -> list[TMessage]:
     engine = create_engine(path)
     messages = []
     with Session(engine) as session:
-        statement = select(ThriftMessage).where(ThriftMessage.method == method).limit(limit)
+        statement = select(TMessage).where(TMessage.method == method).limit(limit)
         results = session.exec(statement)
         for result in results:
             messages.append(result)

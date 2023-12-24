@@ -20,15 +20,15 @@
 import locust
 from sqlmodel import Session, create_engine, select
 
-from thriftoy.LocustUser import ThriftWithoutIDLUser
-from thriftoy.ThriftMessage import ThriftMessage
+from thriftoy.benchmark_tools.LocustUser import ThriftWithoutIDLUser
+from thriftoy.common.TMessage import TMessage
 
 
-def get_thrift_message(path: str) -> list[ThriftMessage]:
+def get_thrift_message(path: str) -> list[TMessage]:
     engine = create_engine(path)
     messages = []
     with Session(engine) as session:
-        statement = select(ThriftMessage)
+        statement = select(TMessage)
         results = session.exec(statement)
         for result in results:
             messages.append(result)
