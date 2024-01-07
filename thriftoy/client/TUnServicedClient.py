@@ -23,8 +23,8 @@ from thriftpy2.transport.framed import TFramedTransportFactory
 from ..common.TMessage import TMessage
 from ..common.TSimpleSocket import TSimpleSocket
 from ..common.TTypes import TransportType
-from ..dump_tools.TExtractMessageProcessor import EmptyThriftStruct
-from ..dump_tools.TMemoryWrappedTransport import TMemoryWrappedTransportFactory
+from ..dump.TExtractMessageProcessor import EmptyThriftStruct
+from ..dump.TMemoryWrappedTransport import TMemoryWrappedTransportFactory
 
 
 class TUnServicedClient(TClient):

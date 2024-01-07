@@ -24,8 +24,8 @@ from thriftpy2.transport.framed import TFramedTransportFactory
 
 from thriftoy.common.TMessage import TMessage
 from thriftoy.common.TTypes import ProtocolType, TransportType
-from thriftoy.dump_tools.TExtractMessageProcessor import TExtractMessageProcessor
-from thriftoy.dump_tools.TMemoryWrappedTransport import TMemoryWrappedTransportFactory
+from thriftoy.dump.TExtractMessageProcessor import TExtractMessageProcessor
+from thriftoy.dump.TMemoryWrappedTransport import TMemoryWrappedTransportFactory
 
 
 class ProxyProcessor(TExtractMessageProcessor):

@@ -21,7 +21,7 @@ import locust
 import thriftpy2
 from sqlmodel import Session, create_engine, select
 
-from thriftoy.benchmark_tools.LocustUser import ThriftUser
+from thriftoy.benchmark.LocustUser import ThriftUser
 from thriftoy.common.TMessage import TMessage
 
 echo_thrift = thriftpy2.load("../echo/echo.thrift", module_name="echo_thrift")

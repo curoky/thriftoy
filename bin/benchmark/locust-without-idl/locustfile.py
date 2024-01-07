@@ -20,7 +20,7 @@
 import locust
 from sqlmodel import Session, create_engine, select
 
-from thriftoy.benchmark_tools.LocustUser import ThriftWithoutIDLUser
+from thriftoy.benchmark.LocustUser import ThriftWithoutIDLUser
 from thriftoy.common.TMessage import TMessage
 
 

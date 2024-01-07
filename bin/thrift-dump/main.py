@@ -24,7 +24,7 @@ import typer
 
 from thriftoy.common.TMessage import TMessage
 from thriftoy.common.TTypes import ProtocolType, TransportType
-from thriftoy.dump_tools.TDumpService import SimpleDBSaver, TMessageDumpProcessor, startDumpService
+from thriftoy.dump.TDumpService import SimpleDBSaver, TMessageDumpProcessor, startDumpService
 
 app = typer.Typer()
 
