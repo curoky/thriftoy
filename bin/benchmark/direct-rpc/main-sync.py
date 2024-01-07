@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022-2023 curoky(cccuroky@gmail.com).
+# Copyright (c) 2022-2024 curoky(cccuroky@gmail.com).
 #
 # This file is part of thriftoy.
 # See https://github.com/curoky/thriftoy for further info.
