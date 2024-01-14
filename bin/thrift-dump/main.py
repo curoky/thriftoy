@@ -43,12 +43,8 @@ def main(
     storage_engine = sqlmodel.create_engine(f"sqlite:///{db_path}", echo=True)
     sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[TMessage.__table__])
 
-    saver = SimpleDBSaver(storage_engine)
-
-    processor = TMessageDumpProcessor(
-        saver=saver,
-        dump_limit=dump_limit,
-    )
+    saver = SimpleDBSaver(storage_engine, save_size_limit=dump_limit)
+    processor = TMessageDumpProcessor(saver=saver)
     startDumpService(
         listen_host,
         listen_port,

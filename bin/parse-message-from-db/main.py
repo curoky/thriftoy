@@ -37,7 +37,7 @@ def send(db_path: Path, host: str = "0.0.0.0", port: int = 6000):
     client = make_simple_client(host=host, port=port, service=echo_thrift.EchoService)
 
     for message in messages[0:1]:
-        rsp = client.call(message)
+        rsp = client.send_message(message)
         print(rsp)
 
 

@@ -53,4 +53,4 @@ class MyThriftUser(ThriftWithoutIDLUser):
     def echo(self):
         self.index = (self.index + 1) % len(self.messages)
         message = self.messages[self.index]
-        self.send(method=self.method, data=message.data)
+        self.request(message.method, message.data)

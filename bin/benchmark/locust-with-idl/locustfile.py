@@ -56,8 +56,7 @@ class MyThriftUser(ThriftUser):
     def echo(self):
         self.index = (self.index + 1) % len(self.messages)
         message = self.messages[self.index]
-        args = message.extract_args(self.service)
-        self.call(self.method, args.req)
+        self.request(message.method, message.extract_args(self.service))
         # print(rsp)
 
 

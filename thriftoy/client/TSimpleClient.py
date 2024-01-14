@@ -37,9 +37,11 @@ class TSimpleClient(TClient):
     ):
         super().__init__(service, iprot, oprot)
 
-    def call(self, message: TMessage):
-        args = message.extract_args(self._service)
-        return TClient.__getattr__(self, message.method)(*list(vars(args).values()))
+    def send_message(self, message: TMessage):
+        return self.call(message.method, message.extract_args(self._service))
+
+    def call(self, method: str, args):
+        return TClient.__getattr__(self, method)(*list(vars(args).values()))
 
 
 def make_simple_client(
