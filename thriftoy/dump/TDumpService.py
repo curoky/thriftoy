@@ -19,6 +19,7 @@ import logging
 import multiprocessing
 import os
 import threading
+import time
 from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
@@ -42,12 +43,27 @@ class StorageType(str, Enum):
 
 
 class SimpleDBSaver:
-    def __init__(self, engine, save_size_limit=-1, save_time_limit=-1) -> None:
+    def __init__(
+        self,
+        engine,
+        save_size_limit=-1,
+        save_time_limit=-1,
+        monitor_step_duration=10,
+    ) -> None:
         self.engine = engine
         self.start_time = datetime.now()
         self.saved_size = 0
         self.save_size_limit = save_size_limit
         self.save_time_limit = save_time_limit
+        self.monitor_step_duration = monitor_step_duration
+        self.monitor_thread = threading.Thread(target=self.monitor)
+        self.monitor_thread.start()
+
+    def monitor(self):
+        while True:
+            elapsed = (datetime.now() - self.start_time).total_seconds()
+            logging.info("elapsed %ds, dumped size: %d", elapsed, self.saved_size)
+            time.sleep(self.monitor_step_duration)
 
     def check_stop(self):
         if self.save_size_limit > 0 and self.saved_size > self.save_size_limit:
@@ -71,9 +87,19 @@ class SimpleDBSaver:
 
 class MultiProcessorDBSaver(SimpleDBSaver):
     def __init__(
-        self, engine, transform: Callable[[TMessage], Any], save_size_limit=-1, save_time_limit=-1
+        self,
+        engine,
+        transform: Callable[[TMessage], Any],
+        save_size_limit=-1,
+        save_time_limit=-1,
+        monitor_step_duration=10,
     ) -> None:
-        super().__init__(engine, save_size_limit=save_size_limit, save_time_limit=save_time_limit)
+        super().__init__(
+            engine,
+            save_size_limit=save_size_limit,
+            save_time_limit=save_time_limit,
+            monitor_step_duration=monitor_step_duration,
+        )
         self.pool = multiprocessing.Pool(10)
         self.result_queue = Queue()
         self.save_bg_thread = threading.Thread(target=self.save)
