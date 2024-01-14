@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from thriftpy2.protocol.binary import TBinaryProtocol
 from thriftpy2.rpc import TSocket
 
@@ -42,6 +44,7 @@ class TExtractMessageProcessor:
         return TMessage(method=method, type=type, seqid=seqid, data=data)
 
     def process(self, iprot: TBinaryProtocol, oprot: TBinaryProtocol):
+        logging.debug("process iprot")
         itrans: TMemoryWrappedTransport = iprot.trans
         message = self.process_in(iprot)
         socket: TSocket = itrans._trans
