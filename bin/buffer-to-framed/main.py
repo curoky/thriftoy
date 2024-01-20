@@ -22,10 +22,10 @@ import typer
 from thriftpy2.rpc import TServerSocket, TSocket, TThreadedServer
 from thriftpy2.transport.framed import TFramedTransportFactory
 
+from thriftoy.common.memory_wrapped_transport import TMemoryWrappedTransportFactory
 from thriftoy.common.message import TMessage
+from thriftoy.common.message_extracted_processor import TMessageExtractedProcessor
 from thriftoy.common.types import ProtocolType, TransportType
-from thriftoy.dump.memory_wrapped_transport import TMemoryWrappedTransportFactory
-from thriftoy.dump.message_extracted_processor import TMessageExtractedProcessor
 
 
 class ProxyProcessor(TMessageExtractedProcessor):

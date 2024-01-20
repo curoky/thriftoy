@@ -22,7 +22,7 @@ from thriftpy2.protocol.exc import TProtocolException
 from thriftpy2.transport.base import TTransportBase
 from thriftpy2.transport.buffered import TBufferedTransport
 
-from ..common.types import TransportType
+from .types import TransportType
 
 
 class TMemoryWrappedTransport(TBufferedTransport):

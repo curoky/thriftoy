@@ -16,44 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-from pathlib import Path
-
-import sqlmodel
-import typer
-
-from thriftoy.common.message import TMessage
-from thriftoy.common.types import ProtocolType, TransportType
-from thriftoy.dump.dump_service import SimpleDBSaver, TMessageDumpProcessor, startDumpService
-
-app = typer.Typer()
-
-
-@app.command()
-def main(
-    db_path: Path,
-    listen_host: str = "0.0.0.0",
-    listen_port: int = 6000,
-    dump_limit: int = 100,
-    transport_type: TransportType = TransportType.FRAMED,
-    protocol_type: ProtocolType = ProtocolType.BINARY,
-):
-    logging.info("start recording server on %s:%s", listen_host, listen_port)
-
-    storage_engine = sqlmodel.create_engine(f"sqlite:///{db_path}", echo=True)
-    sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[TMessage.__table__])
-
-    saver = SimpleDBSaver(storage_engine, save_size_limit=dump_limit)
-    processor = TMessageDumpProcessor(saver=saver)
-    startDumpService(
-        listen_host,
-        listen_port,
-        processor,
-        transport_type=transport_type,
-        protocol_type=protocol_type,
-    )
-
+from thriftoy.tools.thrift_dump import app
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
     app()

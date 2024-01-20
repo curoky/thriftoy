@@ -16,24 +16,21 @@
 # limitations under the License.
 
 import logging
-import multiprocessing
 import os
 import threading
 import time
-from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from queue import Queue
-from typing import Any
+from pathlib import Path
 
 import sqlmodel
+import typer
 from thriftpy2.rpc import TThreadedServer
-from thriftpy2.transport import TServerSocket, TSocket
+from thriftpy2.transport import TServerSocket
 
 from ..common.message import TMessage
+from ..common.message_extracted_processor import TMessageExtractedProcessor
 from ..common.types import ProtocolType, TransportType
-from .memory_wrapped_transport import TMemoryWrappedTransportFactory
-from .message_extracted_processor import TMessageExtractedProcessor
 
 
 class StorageType(str, Enum):
@@ -42,10 +39,11 @@ class StorageType(str, Enum):
     JSON = "json"
 
 
-class SimpleDBSaver:
+class TMessageDumpProcessor(TMessageExtractedProcessor):
     def __init__(
         self,
         engine,
+        transport_type: TransportType,
         save_size_limit=-1,
         save_time_limit=-1,
         monitor_step_duration=10,
@@ -58,6 +56,7 @@ class SimpleDBSaver:
         self.monitor_step_duration = monitor_step_duration
         self.monitor_thread = threading.Thread(target=self.monitor)
         self.monitor_thread.start()
+        super().__init__(transport_type)
 
     def monitor(self):
         while True:
@@ -76,59 +75,13 @@ class SimpleDBSaver:
             logging.info("stop: duration sec %d > save_time_limit %d", sec, self.save_time_limit)
             os._exit(0)
 
-    def push(self, message: TMessage):
-        self.saved_size += 1
-        self.check_stop()
-        while True:
-            with sqlmodel.Session(self.engine) as session:
-                session.add(message)
-                session.commit()
-
-
-class MultiProcessorDBSaver(SimpleDBSaver):
-    def __init__(
-        self,
-        engine,
-        transform: Callable[[TMessage], Any],
-        save_size_limit=-1,
-        save_time_limit=-1,
-        monitor_step_duration=10,
-    ) -> None:
-        super().__init__(
-            engine,
-            save_size_limit=save_size_limit,
-            save_time_limit=save_time_limit,
-            monitor_step_duration=monitor_step_duration,
-        )
-        self.pool = multiprocessing.Pool(10)
-        self.result_queue = Queue()
-        self.save_bg_thread = threading.Thread(target=self.save)
-        self.save_bg_thread.start()
-        self.transform = transform
-
-    def push(self, message: TMessage):
-        self.saved_size += 1
-        self.check_stop()
-        self.result_queue.put(self.pool.apply_async(self.transform, args=(message,)))
-
-    def save(self):
-        logging.info("start thread for saving")
-        while True:
-            result = self.result_queue.get().get()
-            logging.debug("MultiProcessorDBSaver: get messages from queue")
-            if result and len(result) != 0:
-                with sqlmodel.Session(self.engine) as session:
-                    session.add_all(result)
-                    session.commit()
-
-
-class TMessageDumpProcessor(TMessageExtractedProcessor):
-    def __init__(self, saver) -> None:
-        self.saver = saver
-
-    def handle_message(self, socket: TSocket, message: TMessage):
+    def handle_message(self, message: TMessage):
         logging.debug("[handle_message]: method=%s, size=%d", message.method, len(message.data))
-        self.saver.push(message)
+        self.saved_size += 1
+        self.check_stop()
+        with sqlmodel.Session(self.engine) as session:
+            session.add(message)
+            session.commit()
 
 
 def startDumpService(
@@ -139,11 +92,41 @@ def startDumpService(
     transport_type: TransportType = TransportType.FRAMED,
 ):
     server_socket = TServerSocket(host=host, port=port, client_timeout=10000)
-    logging.info("start dump service on %s:%d", host, port)
     server = TThreadedServer(
         processor=processor,
         trans=server_socket,
-        itrans_factory=TMemoryWrappedTransportFactory(transport_type),
+        itrans_factory=transport_type.get_factory(),
         iprot_factory=protocol_type.get_factory(),
     )
     server.serve()
+
+
+app = typer.Typer()
+
+
+@app.command()
+def main(
+    db_path: Path,
+    listen_host: str = "0.0.0.0",
+    listen_port: int = 6000,
+    dump_limit: int = 100,
+    transport_type: TransportType = TransportType.FRAMED,
+    protocol_type: ProtocolType = ProtocolType.BINARY,
+    verbose: bool = False,
+):
+    logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
+    logging.info("start dumpping server on %s:%s", listen_host, listen_port)
+
+    storage_engine = sqlmodel.create_engine(f"sqlite:///{db_path}", echo=verbose)
+    sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[TMessage.__table__])
+
+    processor = TMessageDumpProcessor(
+        storage_engine, save_size_limit=dump_limit, transport_type=transport_type
+    )
+    startDumpService(
+        listen_host,
+        listen_port,
+        processor,
+        transport_type=transport_type,
+        protocol_type=protocol_type,
+    )

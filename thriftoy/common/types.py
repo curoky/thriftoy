@@ -19,7 +19,7 @@ from enum import Enum
 
 from thriftpy2.protocol.binary import TBinaryProtocol, TBinaryProtocolFactory
 from thriftpy2.protocol.compact import TCompactProtocol, TCompactProtocolFactory
-from thriftpy2.transport.buffered import TBufferedTransportFactory
+from thriftpy2.transport.buffered import TBufferedTransport, TBufferedTransportFactory
 from thriftpy2.transport.framed import TFramedTransport, TFramedTransportFactory
 
 
@@ -53,6 +53,9 @@ class TransportType(str, Enum):
     BUFFERED = "buffered"
     # THEADER = "theader"
 
+    # infer_from_factory
+    # infer_from_instance
+
     @staticmethod
     def create(factory_or_trans) -> "TransportType":
         if isinstance(factory_or_trans, TFramedTransportFactory) or isinstance(
@@ -60,7 +63,7 @@ class TransportType(str, Enum):
         ):
             return TransportType.FRAMED
         if isinstance(factory_or_trans, TBufferedTransportFactory) or isinstance(
-            factory_or_trans, TBinaryProtocol
+            factory_or_trans, TBufferedTransport
         ):
             return TransportType.BUFFERED
         raise Exception("TransportType: unknow factory %s", str(factory_or_trans))
