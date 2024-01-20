@@ -21,13 +21,13 @@ import locust
 import thriftpy2
 from sqlmodel import Session, create_engine, select
 
-from thriftoy.benchmark.LocustUser import ThriftUser
-from thriftoy.common.TMessage import TMessage
+from thriftoy.benchmark.locust_user import ThriftUser
+from thriftoy.common.message import TMessage
 
 echo_thrift = thriftpy2.load("../echo/echo.thrift", module_name="echo_thrift")
 
 
-def get_thrift_message(path: str, method: str, limit: int) -> list[TMessage]:
+def get_message_from_sqlite(path: str, method: str, limit: int) -> list[TMessage]:
     engine = create_engine(path)
     messages = []
     with Session(engine) as session:
@@ -46,7 +46,9 @@ class MyThriftUser(ThriftUser):
     method = "echo"
     remote_hosts = ["0.0.0.0", "0.0.0.0"]
     remote_ports = [6000, 6000]
-    messages = get_thrift_message("sqlite:///../../thrift-dump/data.db", method="echo", limit=100)
+    messages = get_message_from_sqlite(
+        "sqlite:///../../thrift-dump/data.db", method="echo", limit=100
+    )
 
     def __init__(self, environment):
         super().__init__(environment)
@@ -61,6 +63,8 @@ class MyThriftUser(ThriftUser):
 
 
 if __name__ == "__main__":
-    messages = get_thrift_message("sqlite:///../../thrift-dump/data.db", method="echo", limit=100)
+    messages = get_message_from_sqlite(
+        "sqlite:///../../thrift-dump/data.db", method="echo", limit=100
+    )
     args = messages[2].extract_args(echo_thrift.EchoService)
     print(args.req.params)

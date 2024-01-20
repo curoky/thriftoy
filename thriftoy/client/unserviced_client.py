@@ -20,11 +20,11 @@ from thriftpy2.rpc import TClient, TSocket
 from thriftpy2.thrift import TApplicationException, TMessageType
 from thriftpy2.transport.framed import TFramedTransportFactory
 
-from ..common.TMessage import TMessage
-from ..common.TSimpleSocket import TSimpleSocket
-from ..common.TTypes import TransportType
-from ..dump.TExtractMessageProcessor import EmptyThriftStruct
-from ..dump.TMemoryWrappedTransport import TMemoryWrappedTransportFactory
+from ..common.message import TMessage
+from ..common.socket import TSimpleSocket
+from ..common.types import TransportType
+from ..dump.memory_wrapped_transport import TMemoryWrappedTransportFactory
+from ..dump.message_extracted_processor import EmptyThriftStruct
 
 
 class TUnServicedClient(TClient):

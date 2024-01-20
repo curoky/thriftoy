@@ -23,8 +23,8 @@ import locust
 from thriftpy2.protocol import TBinaryProtocolFactory
 from thriftpy2.transport import TFramedTransportFactory
 
-from ..client.TSimpleClient import make_simple_client
-from ..common.TSimpleSocket import TSimpleSocket
+from ..client.simple_client import make_simple_client
+from ..common.socket import TSimpleSocket
 
 
 class ThriftWithoutIDLUser(locust.User):

@@ -16,9 +16,10 @@
 # limitations under the License.
 
 import sqlmodel
+from thriftpy2.protocol.json import struct_to_json
 from thriftpy2.transport.memory import TMemoryBuffer
 
-from .TTypes import ProtocolType, TransportType
+from .types import ProtocolType, TransportType
 
 
 def extract_method_args(
@@ -52,6 +53,10 @@ class TMessage(sqlmodel.SQLModel, table=True):
     transport_type: TransportType = TransportType.FRAMED
     data: bytes
 
+    def to_json_str(self, service):
+        args = self.extract_args(service)
+        return struct_to_json(args.req)
+
     def extract_args(
         self,
         service,
@@ -69,7 +74,7 @@ class TMessage(sqlmodel.SQLModel, table=True):
         )
 
 
-def get_thrift_message(path: str, limit: int, method: str | None = None) -> list[TMessage]:
+def get_message_from_sqlite(path: str, limit: int, method: str | None = None) -> list[TMessage]:
     engine = sqlmodel.create_engine(f"sqlite:///{path}")
     messages = []
     with sqlmodel.Session(engine) as session:

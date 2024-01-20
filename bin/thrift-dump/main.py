@@ -22,9 +22,9 @@ from pathlib import Path
 import sqlmodel
 import typer
 
-from thriftoy.common.TMessage import TMessage
-from thriftoy.common.TTypes import ProtocolType, TransportType
-from thriftoy.dump.TDumpService import SimpleDBSaver, TMessageDumpProcessor, startDumpService
+from thriftoy.common.message import TMessage
+from thriftoy.common.types import ProtocolType, TransportType
+from thriftoy.dump.dump_service import SimpleDBSaver, TMessageDumpProcessor, startDumpService
 
 app = typer.Typer()
 

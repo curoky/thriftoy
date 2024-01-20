@@ -26,12 +26,12 @@ from thriftpy2.protocol.binary import TBinaryProtocolFactory
 from thriftpy2.rpc import TSocket, make_client
 from thriftpy2.transport.framed import TFramedTransportFactory
 
-from thriftoy.common.TMessage import TMessage
+from thriftoy.common.message import TMessage
 
 echo_thrift = thriftpy2.load("../echo/echo.thrift", module_name="echo_thrift")
 
 
-def get_thrift_message(path: str, method: str, limit: int) -> list[TMessage]:
+def get_message_from_sqlite(path: str, method: str, limit: int) -> list[TMessage]:
     engine = create_engine(path)
     messages = []
     with Session(engine) as session:
@@ -89,7 +89,9 @@ def main():
     hosts = ["0.0.0.0", "0.0.0.0"]
     ports = [6000, 6000]
     pool = ThreadPoolExecutor(1000)
-    messages = get_thrift_message("sqlite:///../../thrift-dump/data.db", method="echo", limit=100)
+    messages = get_message_from_sqlite(
+        "sqlite:///../../thrift-dump/data.db", method="echo", limit=100
+    )
     for idx in range(200):
         pool.submit(run_send_raw_message, hosts[idx % 2], ports[idx % 2], messages)
     pool.shutdown(wait=True)

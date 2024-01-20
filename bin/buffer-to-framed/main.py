@@ -22,13 +22,13 @@ import typer
 from thriftpy2.rpc import TServerSocket, TSocket, TThreadedServer
 from thriftpy2.transport.framed import TFramedTransportFactory
 
-from thriftoy.common.TMessage import TMessage
-from thriftoy.common.TTypes import ProtocolType, TransportType
-from thriftoy.dump.TExtractMessageProcessor import TExtractMessageProcessor
-from thriftoy.dump.TMemoryWrappedTransport import TMemoryWrappedTransportFactory
+from thriftoy.common.message import TMessage
+from thriftoy.common.types import ProtocolType, TransportType
+from thriftoy.dump.memory_wrapped_transport import TMemoryWrappedTransportFactory
+from thriftoy.dump.message_extracted_processor import TMessageExtractedProcessor
 
 
-class ProxyProcessor(TExtractMessageProcessor):
+class ProxyProcessor(TMessageExtractedProcessor):
     def __init__(self, to_host: str, to_port: int) -> None:
         self.to_host = to_host
         self.to_port = to_port

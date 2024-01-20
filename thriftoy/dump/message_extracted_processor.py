@@ -20,9 +20,9 @@ import logging
 from thriftpy2.protocol.binary import TBinaryProtocol
 from thriftpy2.rpc import TSocket
 
-from ..common.TMessage import TMessage
-from ..common.TTypes import ProtocolType
-from .TMemoryWrappedTransport import TMemoryWrappedTransport
+from ..common.message import TMessage
+from ..common.types import ProtocolType
+from .memory_wrapped_transport import TMemoryWrappedTransport
 
 
 class EmptyThriftStruct:
@@ -30,7 +30,7 @@ class EmptyThriftStruct:
         self.thrift_spec = set()
 
 
-class TExtractMessageProcessor:
+class TMessageExtractedProcessor:
     """
     A TProcessor for unpacking a thrift message without IDL.
     Need to implement the handle_message function.

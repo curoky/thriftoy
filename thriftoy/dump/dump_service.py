@@ -30,10 +30,10 @@ import sqlmodel
 from thriftpy2.rpc import TThreadedServer
 from thriftpy2.transport import TServerSocket, TSocket
 
-from ..common.TMessage import TMessage
-from ..common.TTypes import ProtocolType, TransportType
-from .TExtractMessageProcessor import TExtractMessageProcessor
-from .TMemoryWrappedTransport import TMemoryWrappedTransportFactory
+from ..common.message import TMessage
+from ..common.types import ProtocolType, TransportType
+from .memory_wrapped_transport import TMemoryWrappedTransportFactory
+from .message_extracted_processor import TMessageExtractedProcessor
 
 
 class StorageType(str, Enum):
@@ -122,7 +122,7 @@ class MultiProcessorDBSaver(SimpleDBSaver):
                     session.commit()
 
 
-class TMessageDumpProcessor(TExtractMessageProcessor):
+class TMessageDumpProcessor(TMessageExtractedProcessor):
     def __init__(self, saver) -> None:
         self.saver = saver
 

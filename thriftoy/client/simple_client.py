@@ -20,8 +20,8 @@ from thriftpy2.protocol.binary import TBinaryProtocolFactory
 from thriftpy2.rpc import TClient
 from thriftpy2.transport.framed import TFramedTransportFactory
 
-from ..common.TMessage import TMessage
-from ..common.TSimpleSocket import TSimpleSocket
+from ..common.message import TMessage
+from ..common.socket import TSimpleSocket
 
 
 class TSimpleClient(TClient):

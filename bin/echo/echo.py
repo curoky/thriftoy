@@ -21,7 +21,7 @@ import thriftpy2
 import typer
 from thriftpy2.rpc import make_client, make_server
 
-from thriftoy.common.TTypes import ProtocolType, TransportType
+from thriftoy.common.types import ProtocolType, TransportType
 
 app = typer.Typer()
 echo_thrift = thriftpy2.load("echo.thrift", module_name="echo_thrift")

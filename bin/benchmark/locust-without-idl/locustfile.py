@@ -20,11 +20,11 @@
 import locust
 from sqlmodel import Session, create_engine, select
 
-from thriftoy.benchmark.LocustUser import ThriftWithoutIDLUser
-from thriftoy.common.TMessage import TMessage
+from thriftoy.benchmark.locust_user import ThriftWithoutIDLUser
+from thriftoy.common.message import TMessage
 
 
-def get_thrift_message(path: str) -> list[TMessage]:
+def get_message_from_sqlite(path: str) -> list[TMessage]:
     engine = create_engine(path)
     messages = []
     with Session(engine) as session:
@@ -43,7 +43,7 @@ class MyThriftUser(ThriftWithoutIDLUser):
     remote_hosts = ["0.0.0.0", "0.0.0.0"]
     remote_ports = [6000, 6000]
     local_bound_hosts = ["0.0.0.0", "0.0.0.0"]
-    messages = get_thrift_message("sqlite:///../../thrift-dump/data.db")
+    messages = get_message_from_sqlite("sqlite:///../../thrift-dump/data.db")
 
     def __init__(self, environment):
         super().__init__(environment)
