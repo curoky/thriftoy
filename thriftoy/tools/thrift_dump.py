@@ -75,7 +75,7 @@ class TMessageDumpProcessor(TMessageExtractedProcessor):
             logging.info("stop: duration sec %d > save_time_limit %d", sec, self.save_time_limit)
             os._exit(0)
 
-    def handle_message(self, message: TMessage):
+    def handle_message(self, message: TMessage, iprot, oprot):
         logging.debug("[handle_message]: method=%s, size=%d", message.method, len(message.data))
         self.saved_size += 1
         self.check_stop()

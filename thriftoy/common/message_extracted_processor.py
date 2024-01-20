@@ -99,10 +99,10 @@ class TMessageExtractedProcessor:
         message = self.extract_message(iprot)
         message.transport_type = self.transport_type
         message.protocol_type = ProtocolType.create(iprot)
-        self.handle_message(message)
+        self.handle_message(message, iprot, oprot)
 
         # NOTICE: if call `itrans.close()`, we should
         # `raise TTransportException(TTransportException.END_OF_FILE)`
 
-    def handle_message(self, message: TMessage):
+    def handle_message(self, message: TMessage, iprot, oprot):
         pass
