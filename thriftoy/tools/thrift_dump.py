@@ -16,7 +16,6 @@
 # limitations under the License.
 
 import logging
-import os
 import threading
 import time
 from datetime import datetime
@@ -54,12 +53,16 @@ class TMessageDumpProcessor(TMessageExtractedProcessor):
         self.save_size_limit = save_size_limit
         self.save_time_limit = save_time_limit
         self.monitor_step_duration = monitor_step_duration
+        self.monitor_stop = False
         self.monitor_thread = threading.Thread(target=self.monitor)
         self.monitor_thread.start()
         super().__init__(transport_type)
 
+    def set_close_server_cb(self, close_server_cb):
+        self.close_server_cb = close_server_cb
+
     def monitor(self):
-        while True:
+        while not self.monitor_stop:
             elapsed = (datetime.now() - self.start_time).total_seconds()
             logging.info("elapsed %ds, dumped size: %d", elapsed, self.saved_size)
             time.sleep(self.monitor_step_duration)
@@ -69,11 +72,13 @@ class TMessageDumpProcessor(TMessageExtractedProcessor):
             logging.info(
                 "stop: saved_size %d > save_size_limit %d", self.saved_size, self.save_size_limit
             )
-            os._exit(0)
+            self.close_server_cb()
+            self.monitor_stop = True
         sec = (datetime.now() - self.start_time).total_seconds()
         if self.save_time_limit > 0 and sec > self.save_time_limit:
             logging.info("stop: duration sec %d > save_time_limit %d", sec, self.save_time_limit)
-            os._exit(0)
+            self.close_server_cb()
+            self.monitor_stop = True
 
     def handle_message(self, message: TMessage, iprot, oprot):
         logging.debug("[handle_message]: method=%s, size=%d", message.method, len(message.data))
@@ -98,6 +103,12 @@ def startDumpService(
         itrans_factory=transport_type.get_factory(),
         iprot_factory=protocol_type.get_factory(),
     )
+
+    def close_server():
+        server.close()
+        logging.info("Server closed")
+
+    processor.set_close_server_cb(close_server)
     server.serve()
 
 
