@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any
+
 import sqlmodel
 from thriftpy2.protocol.json import struct_to_json
 from thriftpy2.transport.memory import TMemoryBuffer
@@ -38,6 +40,24 @@ def extract_method_args(
     return args
 
 
+def serialize_method_args(
+    args,
+    method: str,
+    ttype: int,
+    seqid: int,
+    transport_type=TransportType.FRAMED,
+    protocol_type=ProtocolType.BINARY,
+) -> bytes:
+    membuf = TMemoryBuffer()
+    trans = transport_type.get_factory().get_transport(membuf)
+    prot = protocol_type.get_factory().get_protocol(trans)
+    prot.write_message_begin(method, ttype, seqid)
+    args.write(prot)
+    prot.write_message_end()
+    prot.trans.flush()
+    return membuf.getvalue()
+
+
 class TMessage(sqlmodel.SQLModel, table=True):
     id: int | None = sqlmodel.Field(default=None, primary_key=True)
 
@@ -45,6 +65,7 @@ class TMessage(sqlmodel.SQLModel, table=True):
     from_port: int | None = 0
     listen_host: str | None = ""
     listen_port: int | None = 0
+    # timestamp: int = 0
 
     method: str
     type: int  # TODO: to enum?
@@ -73,8 +94,21 @@ class TMessage(sqlmodel.SQLModel, table=True):
             protocol_type=self.protocol_type,
         )
 
+    def serialize_args(self, args) -> bytes:
+        # https://github.com/tiangolo/sqlmodel/pull/442
+        self.transport_type = TransportType(self.transport_type)
+        self.protocol_type = ProtocolType(self.protocol_type)
 
-def get_message_from_sqlite(path: str, limit: int, method: str | None = None) -> list[TMessage]:
+        return serialize_method_args(
+            args,
+            method=self.method,
+            ttype=self.type,
+            seqid=self.seqid,
+            transport_type=self.transport_type,
+            protocol_type=self.protocol_type,
+        )
+
+
     engine = sqlmodel.create_engine(f"sqlite:///{path}")
     messages = []
     with sqlmodel.Session(engine) as session:
