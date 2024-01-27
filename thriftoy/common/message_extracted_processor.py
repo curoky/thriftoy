@@ -35,6 +35,7 @@ class EmptyThriftStruct:
 
 class TFramedTransportHook:
     def __init__(self, trans: TFramedTransport) -> None:
+        assert isinstance(trans, TFramedTransport)
         self._hooked_trans = trans
 
     def get_raw_data(self):
@@ -47,6 +48,7 @@ class TFramedTransportHook:
 
 class TBufferedTransportHook:
     def __init__(self, trans: TBufferedTransport) -> None:
+        assert isinstance(trans, TBufferedTransport)
         self._hooked_trans = trans
         self._hook_buffer_ = io.BytesIO(b"")
 
@@ -74,9 +76,11 @@ class TMessageExtractedProcessor:
     def extract_message(self, prot: TBinaryProtocol) -> TMessage:
         origin_trans = prot.trans
         if self.transport_type == TransportType.FRAMED:
-            prot.trans = TFramedTransportHook(origin_trans)
+            logging.debug("setup TFramedTransportHook for extract message")
+            prot.trans = TFramedTransportHook(origin_trans._trans)
             socket: TSocket = origin_trans._trans._trans
         elif self.transport_type == TransportType.BUFFERED:
+            logging.debug("setup TBufferedTransportHook for extract message")
             prot.trans = TBufferedTransportHook(origin_trans)
             socket: TSocket = origin_trans._trans
         else:
