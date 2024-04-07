@@ -20,7 +20,6 @@ from thriftpy2.protocol.binary import TBinaryProtocolFactory
 from thriftpy2.rpc import TClient
 from thriftpy2.transport.framed import TFramedTransportFactory
 
-from ..common.message import TMessage
 from ..common.socket import TSimpleSocket
 
 
@@ -36,9 +35,6 @@ class TSimpleClient(TClient):
         oprot=None,
     ):
         super().__init__(service, iprot, oprot)
-
-    def send_message(self, message: TMessage):
-        return self.call(message.method, message.extract_args(self._service))
 
     def call(self, method: str, args):
         return TClient.__getattr__(self, method)(*list(vars(args).values()))

@@ -4,4 +4,6 @@ tasks:
   default:
     cmds:
       - rm -rf data.db
-      - ./main.py data.db
+      - ./main.py data.db --transport-type=buffered --listen-port=5841
+    env:
+      PYTHONPATH: /data/workspace/ToolSpace/thriftoy

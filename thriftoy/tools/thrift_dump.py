@@ -123,12 +123,15 @@ def main(
     dump_limit: int = 100,
     transport_type: TransportType = TransportType.FRAMED,
     protocol_type: ProtocolType = ProtocolType.BINARY,
+    clean_db: bool = False,
     verbose: bool = False,
 ):
     logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
     logging.info("start dumpping server on %s:%s", listen_host, listen_port)
 
     storage_engine = sqlmodel.create_engine(f"sqlite:///{db_path}", echo=verbose)
+    if clean_db:
+        sqlmodel.SQLModel.metadata.drop_all(storage_engine)
     sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[TMessage.__table__])
 
     processor = TMessageDumpProcessor(

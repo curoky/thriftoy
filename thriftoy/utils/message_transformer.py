@@ -60,3 +60,14 @@ class MultiProcessBatchingTransformer:
                 session.add_all(message)
             session.commit()
         logging.info("MultiProcessBatchingTransformer: %d messages transformed", count)
+
+
+def batch_transform(
+    source_engine,
+    target_engine,
+    transform=Callable[[TMessage], Any],
+    num_processes=None,
+    limit=None,
+):
+    transformer = MultiProcessBatchingTransformer(transform=transform, num_processes=num_processes)
+    transformer.run(source_engine, target_engine, limit=limit)

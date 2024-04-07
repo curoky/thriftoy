@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any
 
 import sqlmodel
 from thriftpy2.protocol.json import struct_to_json
@@ -109,13 +108,16 @@ class TMessage(sqlmodel.SQLModel, table=True):
         )
 
 
+def get_message_from_sqlite(
+    path: str, limit: int, method: str | None = None, schema=TMessage
+) -> list[TMessage]:
     engine = sqlmodel.create_engine(f"sqlite:///{path}")
     messages = []
     with sqlmodel.Session(engine) as session:
         if method:
-            statement = sqlmodel.select(TMessage).where(TMessage.method == method).limit(limit)
+            statement = sqlmodel.select(schema).where(schema.method == method).limit(limit)
         else:
-            statement = sqlmodel.select(TMessage).limit(limit)
+            statement = sqlmodel.select(schema).limit(limit)
         results = session.exec(statement)
         for result in results:
             messages.append(result)

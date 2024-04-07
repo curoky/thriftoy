@@ -37,31 +37,37 @@ class ThriftWithoutIDLUser(locust.User):
 
     def __init__(self, environment):
         super().__init__(environment)
-        self.socket = self.create_and_open_socket()
+        self.socket = self.create_socket()
+        self.socket.open()
 
-    def create_and_open_socket(self):
+    def create_socket(self):
         idx = random.randint(0, len(self.remote_hosts) - 1)
         local_host = None
         if len(self.local_bound_hosts) == len(self.remote_hosts):
             local_host = self.local_bound_hosts[idx]
         tsocket = TSimpleSocket(
+            connect_timeout=30000,
+            socket_timeout=30000,
             remote_host=self.remote_hosts[idx],
             remote_port=self.remote_ports[idx],
             local_host=local_host,
         )
-        tsocket.open()
         return tsocket
+
+    def on_stop(self):
+        return self.socket.close()
 
     def request(self, method, data):
         start_perf_counter = time.perf_counter()
         exception = None
         try:
             self.socket.write(data)
-            # TFramedTransportFactory().get_transport(self.socket).read(4)
-            # socket.close()
+            TFramedTransportFactory().get_transport(self.socket).read(4)
+            # self.socket.close()
         except Exception as e:
+            self.socket.close()
             logging.error("write failed: %s", e)
-            self.socket = self.create_and_open_socket()
+            self.socket = self.create_socket()
             self.socket.open()
             exception = e
 

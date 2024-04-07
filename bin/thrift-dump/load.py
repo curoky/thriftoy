@@ -23,27 +23,16 @@ import thriftpy2
 import typer
 from thriftpy2.protocol.json import struct_to_json
 
-from thriftoy.client.simple_client import make_simple_client
 from thriftoy.common.message import get_message_from_sqlite
 
-app = typer.Typer()
+app = typer.Typer(pretty_exceptions_enable=False)
 
 echo_thrift = thriftpy2.load("../echo/echo.thrift", module_name="echo_thrift")
 
 
 @app.command()
-def send(db_path: Path, host: str = "0.0.0.0", port: int = 6000):
-    messages = get_message_from_sqlite(f"sqlite:///{db_path}", limit=100)
-    client = make_simple_client(host=host, port=port, service=echo_thrift.EchoService)
-
-    for message in messages[0:1]:
-        rsp = client.call(message.method, message.extract_args(echo_thrift.EchoService))
-        print(rsp)
-
-
-@app.command()
-def save(db_path: Path, save_dir: Path):
-    messages = get_message_from_sqlite(f"sqlite:///{db_path}", limit=100)
+def save(db_path: Path):
+    messages = get_message_from_sqlite(db_path.as_posix(), limit=100)
     for message in messages[0:1]:
         args = message.extract_args(echo_thrift.EchoService)
         data = struct_to_json(args)
