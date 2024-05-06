@@ -50,6 +50,7 @@ class TMessageDumpProcessor(TMessageExtractedProcessor):
         self.engine = engine
         self.start_time = datetime.now()
         self.saved_size = 0
+        self.last_check_saved_size = 0
         self.save_size_limit = save_size_limit
         self.save_time_limit = save_time_limit
         self.monitor_step_duration = monitor_step_duration
@@ -64,14 +65,21 @@ class TMessageDumpProcessor(TMessageExtractedProcessor):
     def monitor(self):
         while not self.monitor_stop:
             elapsed = (datetime.now() - self.start_time).total_seconds()
-            logging.info("elapsed %ds, dumped size: %d", elapsed, self.saved_size)
+            qps = (self.saved_size - self.last_check_saved_size) / self.monitor_step_duration
+            logging.info(
+                "elapsed %ds(%ds), saved: %d(%d), qps: %d",
+                elapsed,
+                self.save_time_limit,
+                self.saved_size,
+                self.save_size_limit,
+                int(qps),
+            )
+            self.last_check_saved_size = self.saved_size
             time.sleep(self.monitor_step_duration)
 
     def check_stop(self):
         if self.save_size_limit > 0 and self.saved_size > self.save_size_limit:
-            logging.info(
-                "stop: saved_size %d > save_size_limit %d", self.saved_size, self.save_size_limit
-            )
+            logging.info("stop: saved_size %d > save_size_limit %d", self.saved_size, self.save_size_limit)
             self.close_server_cb()
             self.monitor_stop = True
         sec = (datetime.now() - self.start_time).total_seconds()
@@ -134,9 +142,7 @@ def main(
         sqlmodel.SQLModel.metadata.drop_all(storage_engine)
     sqlmodel.SQLModel.metadata.create_all(storage_engine, tables=[TMessage.__table__])
 
-    processor = TMessageDumpProcessor(
-        storage_engine, save_size_limit=dump_limit, transport_type=transport_type
-    )
+    processor = TMessageDumpProcessor(storage_engine, save_size_limit=dump_limit, transport_type=transport_type)
     startDumpService(
         listen_host,
         listen_port,
