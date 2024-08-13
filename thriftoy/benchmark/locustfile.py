@@ -28,13 +28,11 @@ dbpath = os.environ.get("DB_PATH")
 if dbpath is None:
     raise Exception("DB_PATH is not set")
 load_req_size = int(os.environ.get("LOAD_REQ_SIZE", 1))
-host = os.environ.get("HOST", "0.0.0.0")
-port = os.environ.get("PORT")
-if port is None:
-    raise Exception("PORT is not set")
+hosts = os.environ.get("HOSTS").split(",")
+ports = list(map(lambda x: int(x), os.environ.get("PORTS").split(",")))
 
-print(f"port: {port}")
-print(f"host: {host}")
+print(f"host: {hosts}")
+print(f"port: {ports}")
 print(f"load_req_size: {load_req_size}")
 print(f"dbpath: {dbpath}")
 
@@ -47,15 +45,15 @@ messages = get_message_from_sqlite(
 class MyThriftUser(ThriftWithoutIDLUser):
     wait_time = locust.between(0.1, 0.1)
 
-    remote_hosts = [host]
-    remote_ports = [int(port)]
+    remote_hosts = hosts
+    remote_ports = ports
 
     def __init__(self, environment):
         super().__init__(environment)
         self.index = 0
 
     @locust.task
-    def recall(self):
+    def do(self):
         self.index = (self.index + 1) % len(messages)
         message = messages[self.index]
         self.request(message.method, message.data)

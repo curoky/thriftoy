@@ -10,7 +10,7 @@ dependencies = [
   "thriftpy2 >=0.4.17",
   "sqlmodel >=0.0.11",
   "locust >=2.18.1",
-  "bbpb >=1.0.1",
+  # "bbpb >=1.0.1",
   "typer >=0.9.0",
 ]
 
